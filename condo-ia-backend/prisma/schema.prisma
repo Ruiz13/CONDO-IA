@@ -109,4 +109,6 @@ model AuditLog {
 model Message {
   id        String   @id @default(uuid())
   text      String
-  isBot     Boolean  @default(false
+  isBot     Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

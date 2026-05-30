@@ -27,15 +27,27 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const payload = { sub: user.id, email: user.email, role: user.role, tenantId: user.tenantId };
+    const payload = { sub: user.id, email: user.email, role: user.role, tenantId: user.tenantId, mustChangePassword: user.mustChangePassword };
     return {
       access_token: await this.jwtService.signAsync(payload),
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
-        tenantId: user.tenantId
+        tenantId: user.tenantId,
+        mustChangePassword: user.mustChangePassword
       }
     };
+  }
+
+  async changePassword(userId: string, newPasswordHash: string) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash: newPasswordHash,
+        mustChangePassword: false,
+      },
+    });
+    return { success: true, message: 'Contraseña actualizada correctamente' };
   }
 }

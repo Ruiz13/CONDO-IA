@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Request } from '@nestjs/common';
+import { Controller, Get, Post, Request, Param } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 
 @Controller('api/invoices')
@@ -17,5 +17,10 @@ export class InvoicesController {
     // req.user.id vendría inyectado por el AuthGuard (JWT)
     const mockUserId = 'user-123'; 
     return this.invoicesService.getMyReceipts(mockUserId);
+  }
+
+  @Get('pending/:userId')
+  async getPendingInvoices(@Param('userId') userId: string) {
+    return this.invoicesService.getPendingInvoices(userId);
   }
 }

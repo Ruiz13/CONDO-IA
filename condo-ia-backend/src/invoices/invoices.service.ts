@@ -39,6 +39,17 @@ export class InvoicesService {
     }
   }
 
+  async getPendingInvoices(userId: string) {
+    return this.prisma.invoice.findMany({
+      where: { 
+        unit: { ownerId: userId },
+        status: 'PENDING'
+      },
+      include: { unit: true },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
   async reportPayment(tenantId: string, invoiceId: string, amount: number, referenceNumber: string) {
     return this.prisma.payment.create({
       data: {

@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Tenant {
+  id           String   @id @default(uuid())
+  name         String
+  geminiApiKey String?
+  createdAt    DateTime @default(now())
+  
+  users        User[]
+  units        Unit[]
+  expenses     Expense[]
+  invoices     Invoice[]
+  payments     Payment[]
+  auditLogs    AuditLog[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  tenantId     String
+  email        String   @unique
+  passwordHash String
+  role         String   // ADMIN or OWNER
+  createdAt    DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  units        Unit[]
+  auditLogs    AuditLog[]
+}
+
+model Unit {
+  id               String   @id @default(uuid())
+  tenantId         String
+  ownerId          String
+  unitNumber       String
+  aliquotPercentage Float
+  isCommercial     Boolean  @default(false)
+
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  owner            User     @relation(fields: [ownerId], references: [id])
+  invoices         Invoice[]
+}
+
+model Expense {
+  id               String   @id @default(uuid())
+  tenantId         String
+  description      String
+  amount           Float
+  date             DateTime
+  isExtraordinary  Boolean  @default(false)
+  expenseCategory  String   // e.g., "Mantenimiento", "Conserjería"
+  
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model Invoice {
+  id          String   @id @default(uuid())
+  tenantId    String
+  unitId      String
+  month       Int
+  year        Int
+  totalAmount Float
+  status      String   // PENDING or PAID
+  createdAt   DateTime @default(now())
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  unit        Unit     @relation(fields: [unitId], references: [id])
+  payments    Payment[]
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  tenantId        String
+  invoiceId       String
+  amount          Float
+  paymentMethod   String   // CARD, TRANSFER, MOVIL
+  referenceNumber String?  
+  status          String   // PENDING or APPROVED
+  ocrConfidence   Float?
+  createdAt       DateTime @default(now())
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id])
+
+  @@unique([tenantId, referenceNumber])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  tenantId    String
+  userId      String
+  action      String
+  tableName   String
+  oldData     String?
+  newData     String?
+  timestamp   DateTime @default(now())
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  text      String
+  isBot     Boolean  @default(false

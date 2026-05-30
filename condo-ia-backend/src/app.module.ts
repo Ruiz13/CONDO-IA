@@ -8,9 +8,11 @@ import { AuthModule } from './auth/auth.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AuditModule } from './audit/audit.module';
 import { CommunicationsModule } from './communications/communications.module';
+import { ExpensesModule } from './expenses/expenses.module';
+import { TenantsModule } from './tenants/tenants.module';
 
 @Module({
-  imports: [PrismaModule, ChatModule, InvoicesModule, AuthModule, PaymentsModule, AuditModule, CommunicationsModule],
+  imports: [PrismaModule, ChatModule, InvoicesModule, AuthModule, PaymentsModule, AuditModule, CommunicationsModule, ExpensesModule, TenantsModule],
   controllers: [AppController],
   providers: [AppService],
 })

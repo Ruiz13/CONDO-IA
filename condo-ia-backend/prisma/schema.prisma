@@ -53,15 +53,16 @@ model Unit {
 }
 
 model Expense {
-  id               String   @id @default(uuid())
-  tenantId         String
-  description      String
-  amount           Float
-  date             DateTime
-  isExtraordinary  Boolean  @default(false)
-  expenseCategory  String   // e.g., "Mantenimiento", "Conserjería"
-  
-  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  id              String   @id @default(uuid())
+  tenantId        String
+  description     String
+  amount          Float
+  date            DateTime @default(now())
+  isExtraordinary Boolean  @default(false)
+  expenseCategory String   @default("MAINTENANCE")
+  appliesTo       String   @default("ALL") // "ALL" or "APARTMENTS_ONLY"
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 model Invoice {

@@ -14,17 +14,67 @@ export class InvoicesService {
    */
   @Cron('0 0 3 * *') // A las 00:00 del día 3 del mes
   async generateMonthlyInvoices() {
-    this.logger.log('Iniciando proceso automático de facturación (Día 3)...');
+    this.logger.log('Iniciando proceso automático de facturación...');
     
     try {
-      // 1. Obtener gastos del mes anterior aprobados y no facturados
-      // 2. Calcular la alícuota de cada unidad (Apartamentos vs Locales)
-      // 3. Generar un 'Invoice' en estado 'PENDING' para cada unidad
-      // 4. Disparar notificaciones Push (Firebase) o Emails (SendGrid) a los dueños
+      const tenants = await this.prisma.tenant.findMany();
       
-      this.logger.log('Facturación completada exitosamente. Se han generado los recibos.');
+      for (const tenant of tenants) {
+        // Obtener todos los gastos del mes (Para este MVP tomamos todos los gastos)
+        const expenses = await this.prisma.expense.findMany({
+          where: { tenantId: tenant.id }
+        });
+
+        if (expenses.length === 0) continue;
+
+        let totalAll = 0;
+        let totalAptsOnly = 0;
+
+        for (const ex of expenses) {
+          if (ex.appliesTo === 'ALL') totalAll += ex.amount;
+          else if (ex.appliesTo === 'APARTMENTS_ONLY') totalAptsOnly += ex.amount;
+        }
+
+        const units = await this.prisma.unit.findMany({
+          where: { tenantId: tenant.id }
+        });
+
+        // Sumar alícuota total de apartamentos (para cálculo relativo)
+        let totalAptAliquot = 0;
+        for (const u of units) {
+          if (!u.isCommercial) totalAptAliquot += u.aliquotPercentage;
+        }
+
+        for (const u of units) {
+          let amount = 0;
+          if (u.isCommercial) {
+            // El local solo paga su porcentaje de gastos generales ("Todos")
+            amount = totalAll * (u.aliquotPercentage / 100);
+          } else {
+            // El apto paga su porcentaje general + porcentaje relativo de exclusivos
+            const aptsOnlyShare = totalAptAliquot > 0 ? (u.aliquotPercentage / totalAptAliquot) : 0;
+            amount = (totalAll * (u.aliquotPercentage / 100)) + (totalAptsOnly * aptsOnlyShare);
+          }
+
+          if (amount > 0) {
+            const today = new Date();
+            await this.prisma.invoice.create({
+              data: {
+                tenantId: tenant.id,
+                unitId: u.id,
+                month: today.getMonth() + 1,
+                year: today.getFullYear(),
+                totalAmount: parseFloat(amount.toFixed(2)),
+                status: 'PENDING'
+              }
+            });
+          }
+        }
+      }
+      
+      this.logger.log('Facturación completada. Recibos generados con cálculos de Alícuota Relativa.');
     } catch (error) {
-      this.logger.error('Error durante la generación masiva de recibos', error);
+      this.logger.error('Error durante la generación de recibos', error);
     }
   }
 

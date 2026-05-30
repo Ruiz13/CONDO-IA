@@ -86,14 +86,25 @@ No incluyas markdown, comillas raras ni texto adicional.`;
     }
   }
 
-  async reportPayment(data: { invoiceId: string, amount: number, referenceNumber: string }) {
+  async reportPayment(data: { invoiceId: string, amount: number, referenceNumber: string, ocrConfidence?: number }) {
+    // Buscar la factura para obtener el tenantId
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: data.invoiceId },
+      select: { tenantId: true }
+    });
+
+    if (!invoice) throw new Error('Invoice not found');
+
     return this.prisma.payment.create({
       data: {
+        invoiceId: data.invoiceId,
         amount: data.amount,
         referenceNumber: data.referenceNumber,
         status: 'PENDING',
-        invoiceId: data.invoiceId,
-      },
+        paymentMethod: 'TRANSFER', // Valor por defecto
+        tenantId: invoice.tenantId,
+        ocrConfidence: data.ocrConfidence
+      }
     });
   }
 }

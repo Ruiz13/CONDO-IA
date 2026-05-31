@@ -29,7 +29,7 @@ export default function SuperAdminPage() {
     setResult(null);
 
     try {
-      const response = await fetch('https://condoia-api-v2.loca.lt/api/tenants/onboard', {
+      const response = await fetch('https://condo-ia-backend.onrender.com/api/tenants/onboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
         body: JSON.stringify(formData)

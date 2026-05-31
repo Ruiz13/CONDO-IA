@@ -21,7 +21,7 @@ export default function AdminDashboard() {
 
   const fetchPayments = async () => {
     try {
-      const response = await fetch('https://condoia-api-v2.loca.lt/api/payments/pending', {
+      const response = await fetch('https://condo-ia-backend.onrender.com/api/payments/pending', {
         headers: { 'Bypass-Tunnel-Reminder': 'true' }
       });
       const data = await response.json();
@@ -33,7 +33,7 @@ export default function AdminDashboard() {
 
   const fetchAuditLogs = async () => {
     try {
-      const response = await fetch('https://condoia-api-v2.loca.lt/api/audit-logs', {
+      const response = await fetch('https://condo-ia-backend.onrender.com/api/audit-logs', {
         headers: { 'Bypass-Tunnel-Reminder': 'true' }
       });
       const data = await response.json();
@@ -46,7 +46,7 @@ export default function AdminDashboard() {
   const fetchGastos = async () => {
     try {
       const tenantId = 'TENANT-ID-MOCK';
-      const response = await fetch(`https://condoia-api-v2.loca.lt/api/expenses/${tenantId}`, {
+      const response = await fetch(`https://condo-ia-backend.onrender.com/api/expenses/${tenantId}`, {
         headers: { 'Bypass-Tunnel-Reminder': 'true' }
       });
       if (response.ok) {
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
     const appliesTo = (reglaStr?.toUpperCase() === 'A') ? 'APARTMENTS_ONLY' : 'ALL';
 
     try {
-      await fetch('https://condoia-api-v2.loca.lt/api/expenses', {
+      await fetch('https://condo-ia-backend.onrender.com/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
         body: JSON.stringify({ tenantId, description: desc, amount, appliesTo })
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
 
   const ejecutarFacturacion = async () => {
     try {
-      const res = await fetch('https://condoia-api-v2.loca.lt/api/invoices/generate-monthly', {
+      const res = await fetch('https://condo-ia-backend.onrender.com/api/invoices/generate-monthly', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' }
       });
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
 
   const aprobarPago = async (id: string) => {
     try {
-      const response = await fetch(`https://condoia-api-v2.loca.lt/api/payments/${id}/approve`, {
+      const response = await fetch(`https://condo-ia-backend.onrender.com/api/payments/${id}/approve`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
     try {
       // Mock tenantId for MVP
       const tenantId = 'TENANT-ID-MOCK'; 
-      const response = await fetch('https://condoia-api-v2.loca.lt/api/communications/announcements', {
+      const response = await fetch('https://condo-ia-backend.onrender.com/api/communications/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
         body: JSON.stringify({ tenantId, title: tituloAviso, content: contenidoAviso })
@@ -157,7 +157,7 @@ export default function AdminDashboard() {
     try {
       const tenantId = 'TENANT-ID-MOCK'; 
       const optionsArray = opcionesEncuesta.split(',').map(o => o.trim()).filter(o => o);
-      const response = await fetch('https://condoia-api-v2.loca.lt/api/communications/polls', {
+      const response = await fetch('https://condo-ia-backend.onrender.com/api/communications/polls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Bypass-Tunnel-Reminder': 'true' },
         body: JSON.stringify({ tenantId, question: preguntaEncuesta, options: optionsArray })

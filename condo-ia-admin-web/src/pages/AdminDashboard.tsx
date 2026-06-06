@@ -1140,8 +1140,6 @@ export default function AdminDashboard() {
                     {creatingExpense ? 'Registrando...' : 'Agregar Gasto'}
                   </button>
                 </form>
-              </div>
-
               <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 flex flex-col">
                 <h3 className="text-xl font-bold mb-4">Emisión de Recibos</h3>
                 <p className="text-gray-400 text-sm mb-6">
@@ -1149,11 +1147,11 @@ export default function AdminDashboard() {
                 </p>
                 <div className="mt-auto">
                   <div className="text-2xl font-bold text-white mb-2">
-                    Total Gastos: ${expenses.reduce((acc, curr) => acc + curr.amount, 0).toFixed(2)}
+                    Total Gastos Pendientes: ${expenses.filter((e: any) => !e.isBilled).reduce((acc: number, curr: any) => acc + curr.amount, 0).toFixed(2)}
                   </div>
                   <button 
                     onClick={handleGenerateInvoices}
-                    disabled={generatingInvoices || expenses.length === 0} 
+                    disabled={generatingInvoices || expenses.filter((e: any) => !e.isBilled).length === 0} 
                     className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 flex justify-center items-center gap-2"
                   >
                     {generatingInvoices ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Emitir Facturación Mensual'}

@@ -78,6 +78,8 @@ export class BillingService {
         const subject = `Factura de Condominio - Mes ${month}/${year} - Unidad ${unit.unitNumber}`;
         const text = `Hola,\n\nAdjuntamos el recibo de cobro correspondiente al mes ${month}/${year} por un total de $${amountToPay.toFixed(2)}.\n\nAtentamente,\nJunta de Condominio ${tenant.name}`;
         
+        // Temporarily disabled to avoid hanging without SMTP config
+        /*
         await this.emailService.sendEmailWithAttachment(
           unit.owner.email,
           subject,
@@ -85,6 +87,7 @@ export class BillingService {
           pdfBuffer,
           `Recibo_Condominio_${month}_${year}_U${unit.unitNumber}.pdf`
         );
+        */
       }
 
       // 4. Marcar gastos como facturados

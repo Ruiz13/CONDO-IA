@@ -75,7 +75,6 @@ let BillingService = BillingService_1 = class BillingService {
                 });
                 const subject = `Factura de Condominio - Mes ${month}/${year} - Unidad ${unit.unitNumber}`;
                 const text = `Hola,\n\nAdjuntamos el recibo de cobro correspondiente al mes ${month}/${year} por un total de $${amountToPay.toFixed(2)}.\n\nAtentamente,\nJunta de Condominio ${tenant.name}`;
-                await this.emailService.sendEmailWithAttachment(unit.owner.email, subject, text, pdfBuffer, `Recibo_Condominio_${month}_${year}_U${unit.unitNumber}.pdf`);
             }
             await this.prisma.expense.updateMany({
                 where: { id: { in: unbilledExpenses.map(e => e.id) } },

@@ -58,7 +58,6 @@ export default function AdminDashboard() {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [newExpense, setNewExpense] = useState({ description: '', amount: '', appliesTo: 'ALL', providerName: '', providerInvoice: '' });
   const [creatingExpense, setCreatingExpense] = useState(false);
-  const [generatingInvoices, setGeneratingInvoices] = useState(false);
   const [pendingPayments, setPendingPayments] = useState<any[]>([]);
   const [approvingPayment, setApprovingPayment] = useState<string | null>(null);
 
@@ -319,27 +318,6 @@ export default function AdminDashboard() {
       alert('Error de conexión');
     } finally {
       setCreatingExpense(false);
-    }
-  };
-
-  const handleGenerateInvoices = async () => {
-    if (!window.confirm('¿Estás seguro de generar las facturas del mes para todos los residentes usando los gastos actuales?')) return;
-    setGeneratingInvoices(true);
-    try {
-      const res = await fetch(`https://condo-ia-backend.onrender.com/api/billing/generate/${user.tenantId}`, {
-        method: 'POST'
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert(data.message || 'Facturación generada y recibos enviados con éxito');
-        fetchExpenses();
-      } else {
-        alert(data.message || 'Error al generar facturas');
-      }
-    } catch (e) {
-      alert('Error de conexión');
-    } finally {
-      setGeneratingInvoices(false);
     }
   };
 
@@ -1140,6 +1118,8 @@ export default function AdminDashboard() {
                     {creatingExpense ? 'Registrando...' : 'Agregar Gasto'}
                   </button>
                 </form>
+              </div>
+
               <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 flex flex-col justify-center text-center">
                 <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FileText className="w-8 h-8 text-emerald-400" />

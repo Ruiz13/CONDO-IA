@@ -955,59 +955,6 @@ export default function AdminDashboard() {
         {activeTab === 'residentes' && (
           <div className="space-y-6">
             <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
-              <h3 className="text-xl font-bold mb-4">Registrar Nuevo Residente</h3>
-              <p className="text-sm text-gray-400 mb-6">Asigna un propietario a un apartamento para darle acceso a la aplicación móvil.</p>
-              <form onSubmit={handleCreateUnit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Número de Apartamento (Ej: Apto 1-A)</label>
-                  <input
-                    type="text"
-                    value={newUnit.unitNumber}
-                    onChange={(e) => setNewUnit({ ...newUnit, unitNumber: e.target.value })}
-                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Correo del Propietario</label>
-                  <input
-                    type="email"
-                    value={newUnit.ownerEmail}
-                    onChange={(e) => setNewUnit({ ...newUnit, ownerEmail: e.target.value })}
-                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Contraseña Inicial</label>
-                  <input
-                    type="text"
-                    value={newUnit.ownerPassword}
-                    onChange={(e) => setNewUnit({ ...newUnit, ownerPassword: e.target.value })}
-                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Alícuota (%)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newUnit.aliquotPercentage}
-                    onChange={(e) => setNewUnit({ ...newUnit, aliquotPercentage: e.target.value })}
-                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
-                    required
-                  />
-                </div>
-                <div className="md:col-span-2 mt-2">
-                  <button type="submit" disabled={creatingUnit} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
-                    {creatingUnit ? 'Registrando...' : '+ Añadir Residente'}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
               <h3 className="text-xl font-bold mb-4">Restablecer Clave de Acceso</h3>
               <p className="text-sm text-gray-400 mb-6">Selecciona el residente y asígnale una clave temporal si ha perdido su acceso.</p>
               <form onSubmit={handleResetPassword} className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1058,7 +1005,6 @@ export default function AdminDashboard() {
                         <th className="p-3 font-medium">Apartamento</th>
                         <th className="p-3 font-medium">Propietario (Correo)</th>
                         <th className="p-3 font-medium">Alícuota</th>
-                        <th className="p-3 font-medium text-right">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1067,15 +1013,6 @@ export default function AdminDashboard() {
                           <td className="p-3 font-bold text-white">{unit.unitNumber}</td>
                           <td className="p-3 text-gray-300">{unit.owner?.email}</td>
                           <td className="p-3 text-indigo-400">{unit.aliquotPercentage}%</td>
-                          <td className="p-3 text-right">
-                            <button
-                              onClick={() => handleDeleteUnit(unit.id, unit.unitNumber)}
-                              className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                              title="Eliminar Residente"
-                            >
-                              <Trash2 className="w-5 h-5" />
-                            </button>
-                          </td>
                         </tr>
                       ))}
                     </tbody>

@@ -1140,22 +1140,16 @@ export default function AdminDashboard() {
                     {creatingExpense ? 'Registrando...' : 'Agregar Gasto'}
                   </button>
                 </form>
-              <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 flex flex-col">
-                <h3 className="text-xl font-bold mb-4">Emisión de Recibos</h3>
+              <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 flex flex-col justify-center text-center">
+                <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-8 h-8 text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Facturación Automática Activada</h3>
                 <p className="text-gray-400 text-sm mb-6">
-                  Una vez que hayas registrado todos los gastos del mes, presiona el siguiente botón. El sistema calculará automáticamente la deuda de cada residente según su porcentaje de alícuota y generará los recibos pendientes.
+                  El sistema "Cerebro Financiero" calculará todos los gastos pendientes y emitirá los recibos a los residentes automáticamente el <strong>día 1 de cada mes a las 00:00</strong>. No necesitas hacer nada más.
                 </p>
-                <div className="mt-auto">
-                  <div className="text-2xl font-bold text-white mb-2">
-                    Total Gastos Pendientes: ${expenses.filter((e: any) => !e.isBilled).reduce((acc: number, curr: any) => acc + curr.amount, 0).toFixed(2)}
-                  </div>
-                  <button 
-                    onClick={handleGenerateInvoices}
-                    disabled={generatingInvoices || expenses.filter((e: any) => !e.isBilled).length === 0} 
-                    className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 flex justify-center items-center gap-2"
-                  >
-                    {generatingInvoices ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Emitir Facturación Mensual'}
-                  </button>
+                <div className="text-3xl font-bold text-white">
+                  Total Gastos Pendientes: ${expenses.filter((e: any) => !e.isBilled).reduce((acc: number, curr: any) => acc + curr.amount, 0).toFixed(2)}
                 </div>
               </div>
             </div>

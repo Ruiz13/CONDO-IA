@@ -94,4 +94,9 @@ export class TenantsController {
   ) {
     return this.tenantsService.updateTenantSettings(tenantId, body);
   }
+
+  @Post(':tenantId/clear-finances')
+  async clearFinances(@Param('tenantId') tenantId: string) {
+    return this.tenantsService.clearFinances(tenantId);
+  }
 }

@@ -96,6 +96,7 @@ export default function AdminDashboard() {
       if (activeTab === 'resumen') {
         fetchStats();
         fetchFinancialDataForCharts();
+        fetchUnits();
       }
       if (activeTab === 'perfil') fetchTenantConfig();
     }

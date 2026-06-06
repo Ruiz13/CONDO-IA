@@ -148,6 +148,8 @@ export class TenantsService {
   async deleteTenant(tenantId: string) {
     return await this.prisma.$transaction(async (tx) => {
       // Borrar todas las dependencias en orden inverso para respetar las claves foráneas
+      await tx.knowledgeDocument.deleteMany({ where: { tenantId } });
+      await tx.message.deleteMany({ where: { tenantId } });
       await tx.vote.deleteMany({ where: { poll: { tenantId } } });
       await tx.pollOption.deleteMany({ where: { poll: { tenantId } } });
       await tx.poll.deleteMany({ where: { tenantId } });

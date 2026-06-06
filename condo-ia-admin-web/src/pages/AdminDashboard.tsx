@@ -43,6 +43,8 @@ export default function AdminDashboard() {
   const [resetUnitEmail, setResetUnitEmail] = useState('');
   const [newGenericPassword, setNewGenericPassword] = useState('admin123');
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [newUnit, setNewUnit] = useState({ unitNumber: '', ownerEmail: '', ownerPassword: '', aliquotPercentage: '' });
+  const [creatingUnit, setCreatingUnit] = useState(false);
 
   const [profileEmail, setProfileEmail] = useState('');
   const [profilePassword, setProfilePassword] = useState('');
@@ -366,6 +368,35 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleCreateUnit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingUnit(true);
+    try {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/units`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          unitNumber: newUnit.unitNumber,
+          ownerEmail: newUnit.ownerEmail,
+          ownerPassword: newUnit.ownerPassword,
+          aliquotPercentage: parseFloat(newUnit.aliquotPercentage)
+        })
+      });
+      if (res.ok) {
+        setNewUnit({ unitNumber: '', ownerEmail: '', ownerPassword: '', aliquotPercentage: '' });
+        fetchUnits();
+        toast.success('Residente registrado exitosamente');
+      } else {
+        const err = await res.json();
+        toast.error(`Error al registrar residente: ${err.message}`);
+      }
+    } catch (error) {
+      toast.error('Error de conexión');
+    } finally {
+      setCreatingUnit(false);
     }
   };
 
@@ -923,6 +954,59 @@ export default function AdminDashboard() {
 
         {activeTab === 'residentes' && (
           <div className="space-y-6">
+            <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
+              <h3 className="text-xl font-bold mb-4">Registrar Nuevo Residente</h3>
+              <p className="text-sm text-gray-400 mb-6">Asigna un propietario a un apartamento para darle acceso a la aplicación móvil.</p>
+              <form onSubmit={handleCreateUnit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Número de Apartamento (Ej: Apto 1-A)</label>
+                  <input
+                    type="text"
+                    value={newUnit.unitNumber}
+                    onChange={(e) => setNewUnit({ ...newUnit, unitNumber: e.target.value })}
+                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Correo del Propietario</label>
+                  <input
+                    type="email"
+                    value={newUnit.ownerEmail}
+                    onChange={(e) => setNewUnit({ ...newUnit, ownerEmail: e.target.value })}
+                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Contraseña Inicial</label>
+                  <input
+                    type="text"
+                    value={newUnit.ownerPassword}
+                    onChange={(e) => setNewUnit({ ...newUnit, ownerPassword: e.target.value })}
+                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Alícuota (%)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newUnit.aliquotPercentage}
+                    onChange={(e) => setNewUnit({ ...newUnit, aliquotPercentage: e.target.value })}
+                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
+                    required
+                  />
+                </div>
+                <div className="md:col-span-2 mt-2">
+                  <button type="submit" disabled={creatingUnit} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
+                    {creatingUnit ? 'Registrando...' : '+ Añadir Residente'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
             <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
               <h3 className="text-xl font-bold mb-4">Restablecer Clave de Acceso</h3>
               <p className="text-sm text-gray-400 mb-6">Selecciona el residente y asígnale una clave temporal si ha perdido su acceso.</p>

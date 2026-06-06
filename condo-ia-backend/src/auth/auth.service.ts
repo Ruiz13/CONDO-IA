@@ -1,6 +1,7 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -12,18 +13,32 @@ export class AuthService {
   ) {}
 
   async login(email: string, passwordHash: string) {
+    console.log(`[LOGIN ATTEMPT] Email: ${email}, Password length: ${passwordHash?.length}`);
     // IMPORTANTE: Siguiendo las recomendaciones de seguridad, 
     // la validación de contraseñas se hace con la base de datos tradicional, NO con Gemini.
     const user = await this.prisma.user.findUnique({
       where: { email },
+      include: { tenant: true }
     });
 
     if (!user) {
+      console.log(`[LOGIN FAILED] User not found for email: ${email}`);
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Nota: Para MVP comparamos directamente. En producción se usaría bcrypt.compare()
-    if (user.passwordHash !== passwordHash) {
+    console.log(`[LOGIN] User found. Role: ${user.role}, Tenant: ${user.tenant ? user.tenant.name : 'NONE'}`);
+
+    if (user.role !== 'SUPER_ADMIN' && user.tenant && user.tenant.isActive === false) {
+      console.log(`[LOGIN BLOCKED] Tenant suspended for user: ${email}`);
+      throw new UnauthorizedException('Condominio suspendido por falta de pago.');
+    }
+
+    // Usamos bcrypt.compare para máxima seguridad (Super Admin y futuros usuarios)
+    // Para retrocompatibilidad del MVP, también probamos si coincide en texto plano
+    const isPasswordValid = await bcrypt.compare(passwordHash, user.passwordHash) || user.passwordHash === passwordHash;
+    console.log(`[LOGIN] isPasswordValid: ${isPasswordValid}`);
+    
+    if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
@@ -35,7 +50,9 @@ export class AuthService {
         email: user.email,
         role: user.role,
         tenantId: user.tenantId,
-        mustChangePassword: user.mustChangePassword
+        tenantName: user.tenant?.name || 'Mi Edificio',
+        mustChangePassword: user.mustChangePassword,
+        avatarBase64: user.avatarBase64
       }
     };
   }
@@ -49,5 +66,46 @@ export class AuthService {
       },
     });
     return { success: true, message: 'Contraseña actualizada correctamente' };
+  }
+
+  async updateProfile(userId: string, newEmail?: string, newPassword?: string) {
+    const data: any = {};
+    if (newEmail) {
+      // Verificar si el correo ya existe
+      const existing = await this.prisma.user.findUnique({ where: { email: newEmail } });
+      if (existing && existing.id !== userId) {
+        throw new BadRequestException('Ese correo ya está en uso por otra persona.');
+      }
+      data.email = newEmail;
+    }
+    if (newPassword) {
+      data.passwordHash = await bcrypt.hash(newPassword, 10);
+      data.mustChangePassword = false;
+    }
+    
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data
+    });
+    
+    return { 
+      success: true, 
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        tenantId: user.tenantId,
+        mustChangePassword: user.mustChangePassword,
+        avatarBase64: user.avatarBase64
+      } 
+    };
+  }
+
+  async updateAvatar(userId: string, avatarBase64: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarBase64 },
+    });
+    return { success: true, message: 'Avatar actualizado' };
   }
 }

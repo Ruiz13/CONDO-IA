@@ -2,14 +2,41 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../constants/api';
 
 export default function ChatScreen() {
-  const [messages, setMessages] = useState([{ id: '1', text: '¡Hola! Soy tu asistente virtual Condo IA. ¿En qué puedo ayudarte hoy?', isBot: true }]);
+  const [messages, setMessages] = useState<any[]>([{ id: '1', text: '¡Hola! Soy tu asistente virtual Condo IA. ¿En qué puedo ayudarte hoy?', isBot: true }]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+
+  React.useEffect(() => {
+    if (user?.id) {
+      fetchHistory();
+    }
+  }, [user?.id]);
+
+  const fetchHistory = async () => {
+    try {
+      const res = await fetch(API_URL(`/api/chat/${user?.id}`), {
+        headers: { 'Bypass-Tunnel-Reminder': 'true' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.length > 0) {
+          const formatted = data.map((m: any) => ({
+            id: m.id,
+            text: m.text,
+            isBot: m.isBot
+          }));
+          setMessages(formatted);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const sendMessage = async () => {
     if (!inputText.trim()) return;
@@ -20,8 +47,7 @@ export default function ChatScreen() {
     setLoading(true);
 
     try {
-      // Usando el túnel dedicado del backend
-      const response = await fetch('https://condoia-api-2026.loca.lt/api/chat', {
+      const response = await fetch(API_URL('/api/chat'), {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -54,12 +80,13 @@ export default function ChatScreen() {
         <ScrollView contentContainerStyle={styles.chatContainer}>
           {messages.map(msg => (
             <View key={msg.id} style={[styles.messageBubble, msg.isBot ? styles.botBubble : styles.userBubble]}>
-              <Text style={styles.messageText}>{msg.text}</Text>
+              <Text style={msg.isBot ? styles.botMessageText : styles.userMessageText}>{msg.text}</Text>
             </View>
           ))}
           {loading && (
-            <View style={[styles.messageBubble, styles.botBubble]}>
-              <ActivityIndicator color="#c084fc" />
+            <View style={[styles.messageBubble, styles.botBubble, { flexDirection: 'row', alignItems: 'center' }]}>
+              <ActivityIndicator color="#c084fc" size="small" style={{ marginRight: 10 }} />
+              <Text style={styles.botMessageText}>Escribiendo...</Text>
             </View>
           )}
         </ScrollView>
@@ -88,11 +115,12 @@ const styles = StyleSheet.create({
   backButton: { marginRight: 15 },
   headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   chatContainer: { padding: 20, paddingBottom: 40 },
-  messageBubble: { maxWidth: '85%', padding: 15, borderRadius: 20, marginBottom: 15 },
+  messageBubble: { maxWidth: '85%', padding: 15, borderRadius: 20, marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
   botBubble: { backgroundColor: '#1e1e38', alignSelf: 'flex-start', borderBottomLeftRadius: 5 },
   userBubble: { backgroundColor: '#c084fc', alignSelf: 'flex-end', borderBottomRightRadius: 5 },
-  messageText: { color: '#fff', fontSize: 15, lineHeight: 22 },
+  userMessageText: { color: '#fff', fontSize: 16, lineHeight: 22 },
+  botMessageText: { color: '#e2e8f0', fontSize: 16, lineHeight: 22 },
   inputContainer: { flexDirection: 'row', padding: 15, borderTopWidth: 1, borderTopColor: '#1e1e38', alignItems: 'center', paddingBottom: 30 },
   input: { flex: 1, backgroundColor: '#1e1e38', color: '#fff', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 25, fontSize: 15 },
-  sendButton: { backgroundColor: '#c084fc', width: 46, height: 46, borderRadius: 23, justifyContent: 'center', alignItems: 'center', marginLeft: 10 }
+  sendButton: { backgroundColor: '#c084fc', width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginLeft: 10, shadowColor: '#c084fc', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 5, elevation: 5 }
 });

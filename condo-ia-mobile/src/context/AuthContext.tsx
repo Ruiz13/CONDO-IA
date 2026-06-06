@@ -7,6 +7,7 @@ type User = {
   role: string;
   tenantId: string;
   mustChangePassword?: boolean;
+  avatarBase64?: string;
 };
 
 type AuthContextType = {

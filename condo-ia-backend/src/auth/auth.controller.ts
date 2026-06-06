@@ -16,4 +16,13 @@ export class AuthController {
     // En producción se sacaría del token JWT con un Guard
     return this.authService.changePassword(body.userId, body.newPassword);
   }
+
+  @Post('update-avatar')
+  updateAvatar(@Body() body: { userId: string, avatarBase64: string }) {
+    return this.authService.updateAvatar(body.userId, body.avatarBase64);
+  }
+  @Post('update-profile')
+  updateProfile(@Body() body: { userId: string, newEmail?: string, newPassword?: string }) {
+    return this.authService.updateProfile(body.userId, body.newEmail, body.newPassword);
+  }
 }

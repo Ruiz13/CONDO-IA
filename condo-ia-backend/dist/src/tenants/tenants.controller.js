@@ -1,0 +1,151 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TenantsController = void 0;
+const common_1 = require("@nestjs/common");
+const tenants_service_1 = require("./tenants.service");
+let TenantsController = class TenantsController {
+    tenantsService;
+    constructor(tenantsService) {
+        this.tenantsService = tenantsService;
+    }
+    async onboardTenant(body) {
+        return this.tenantsService.onboardTenant(body);
+    }
+    async getAllTenants() {
+        return this.tenantsService.getAllTenants();
+    }
+    async createTenantWithAdmin(body) {
+        return this.tenantsService.createTenantWithAdmin(body);
+    }
+    async getUnitsByTenant(tenantId) {
+        return this.tenantsService.getUnitsByTenant(tenantId);
+    }
+    async createUnitAndOwner(tenantId, body) {
+        return this.tenantsService.createUnitAndOwner(tenantId, body.unitNumber, body.ownerEmail, body.ownerPassword, body.aliquotPercentage);
+    }
+    async getTenantStats(tenantId) {
+        return this.tenantsService.getTenantStats(tenantId);
+    }
+    async getFinancialReport(tenantId) {
+        return this.tenantsService.getFinancialReport(tenantId);
+    }
+    async deleteTenant(tenantId) {
+        return this.tenantsService.deleteTenant(tenantId);
+    }
+    async toggleTenantStatus(tenantId) {
+        return this.tenantsService.toggleTenantStatus(tenantId);
+    }
+    async resetAdminPassword(tenantId) {
+        return this.tenantsService.resetAdminPassword(tenantId);
+    }
+    async updateTenantLogo(tenantId, body) {
+        return this.tenantsService.updateTenantLogo(tenantId, body.logoBase64);
+    }
+    async updateTenantSettings(tenantId, body) {
+        return this.tenantsService.updateTenantSettings(tenantId, body);
+    }
+};
+exports.TenantsController = TenantsController;
+__decorate([
+    (0, common_1.Post)('onboard'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "onboardTenant", null);
+__decorate([
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "getAllTenants", null);
+__decorate([
+    (0, common_1.Post)('create-with-admin'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "createTenantWithAdmin", null);
+__decorate([
+    (0, common_1.Get)(':tenantId/units'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "getUnitsByTenant", null);
+__decorate([
+    (0, common_1.Post)(':tenantId/units'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "createUnitAndOwner", null);
+__decorate([
+    (0, common_1.Get)(':tenantId/stats'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "getTenantStats", null);
+__decorate([
+    (0, common_1.Get)(':tenantId/reports/financial'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "getFinancialReport", null);
+__decorate([
+    (0, common_1.Delete)(':tenantId'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "deleteTenant", null);
+__decorate([
+    (0, common_1.Patch)(':tenantId/toggle-status'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "toggleTenantStatus", null);
+__decorate([
+    (0, common_1.Post)(':tenantId/reset-admin-password'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "resetAdminPassword", null);
+__decorate([
+    (0, common_1.Patch)(':tenantId/logo'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "updateTenantLogo", null);
+__decorate([
+    (0, common_1.Patch)(':tenantId/settings'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "updateTenantSettings", null);
+exports.TenantsController = TenantsController = __decorate([
+    (0, common_1.Controller)('api/tenants'),
+    __metadata("design:paramtypes", [tenants_service_1.TenantsService])
+], TenantsController);
+//# sourceMappingURL=tenants.controller.js.map

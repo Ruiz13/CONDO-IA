@@ -2,19 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+import { EmailService } from '../email/email.service';
+
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
   private genAI: GoogleGenerativeAI;
 
-  constructor(private prisma: PrismaService) {
+  constructor(private prisma: PrismaService, private emailService: EmailService) {
     this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
   }
 
   async getPendingPayments() {
     return this.prisma.payment.findMany({
       where: { status: 'PENDING' },
-      include: { invoice: { include: { unit: true } } },
+      include: { unit: true },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -28,17 +30,49 @@ export class PaymentsService {
     }
 
     const oldPayment = await this.prisma.payment.findUnique({ where: { id } });
+    if (!oldPayment || oldPayment.status !== 'PENDING') return null;
 
     const payment = await this.prisma.payment.update({
       where: { id },
       data: { status: 'APPROVED' },
+      include: { unit: { include: { owner: true } } }
     });
 
-    if (payment.invoiceId) {
-      await this.prisma.invoice.update({
-        where: { id: payment.invoiceId },
-        data: { status: 'PAID' },
-      });
+    // Partial payments distribution
+    // Find all pending/partial invoices for this unit, ordered by oldest first
+    const pendingInvoices = await this.prisma.invoice.findMany({
+      where: { unitId: payment.unitId, status: { in: ['PENDING', 'PARTIAL'] } },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    let remainingAmount = payment.amount;
+
+    for (const invoice of pendingInvoices) {
+      if (remainingAmount <= 0) break;
+
+      const debt = invoice.totalAmount - invoice.amountPaid;
+      
+      if (remainingAmount >= debt) {
+        // Pay it fully
+        await this.prisma.invoice.update({
+          where: { id: invoice.id },
+          data: {
+            amountPaid: invoice.totalAmount,
+            status: 'PAID'
+          }
+        });
+        remainingAmount -= debt;
+      } else {
+        // Partial payment
+        await this.prisma.invoice.update({
+          where: { id: invoice.id },
+          data: {
+            amountPaid: invoice.amountPaid + remainingAmount,
+            status: 'PARTIAL'
+          }
+        });
+        remainingAmount = 0;
+      }
     }
 
     if (finalAdminId && oldPayment) {
@@ -54,12 +88,25 @@ export class PaymentsService {
       });
     }
 
+    // Send Email to the owner
+    if (payment.unit?.owner?.email) {
+      const emailHtml = `
+        <h2>Hola, ${payment.unit.unitNumber}</h2>
+        <p>Tu pago ha sido <strong>APROBADO</strong> exitosamente.</p>
+        <p><strong>Monto Acreditado:</strong> $${payment.amount.toFixed(2)}</p>
+        <p><strong>Referencia:</strong> ${payment.referenceNumber}</p>
+        <p>Gracias por mantenerte al día con el condominio.</p>
+      `;
+      // No we await because we want it fast, but we don't want to block if email fails.
+      this.emailService.sendEmail(payment.unit.owner.email, 'Recibo de Pago Aprobado', emailHtml).catch(e => this.logger.error(e));
+    }
+
     return payment;
   }
 
   async extractOcrData(base64Image: string) {
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const prompt = `Analiza este comprobante bancario de pago. 
 Extrae únicamente el número de referencia (referenceNumber) y el monto total transferido o depositado (amount) (solo el número, sin el símbolo del dólar).
 Debes devolver la respuesta ÚNICAMENTE en este formato JSON exacto:
@@ -86,25 +133,38 @@ No incluyas markdown, comillas raras ni texto adicional.`;
     }
   }
 
-  async reportPayment(data: { invoiceId: string, amount: number, referenceNumber: string, ocrConfidence?: number }) {
-    // Buscar la factura para obtener el tenantId
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id: data.invoiceId },
+  async reportPayment(data: { unitId: string, amount: number, referenceNumber: string, ocrConfidence?: number }) {
+    const unit = await this.prisma.unit.findUnique({
+      where: { id: data.unitId },
       select: { tenantId: true }
     });
 
-    if (!invoice) throw new Error('Invoice not found');
+    if (!unit) throw new Error('Unit not found');
 
     return this.prisma.payment.create({
       data: {
-        invoiceId: data.invoiceId,
+        unitId: data.unitId,
         amount: data.amount,
         referenceNumber: data.referenceNumber,
         status: 'PENDING',
         paymentMethod: 'TRANSFER', // Valor por defecto
-        tenantId: invoice.tenantId,
+        tenantId: unit.tenantId,
         ocrConfidence: data.ocrConfidence
       }
+    });
+  }
+
+  async getUserPayments(userId: string) {
+    return this.prisma.payment.findMany({
+      where: {
+        unit: {
+          ownerId: userId
+        }
+      },
+      include: {
+        unit: true
+      },
+      orderBy: { createdAt: 'desc' }
     });
   }
 }

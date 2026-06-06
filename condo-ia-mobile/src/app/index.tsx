@@ -1,66 +1,166 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Dimensions, Image, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { router, Link } from 'expo-router';
+import { router, Link, useFocusEffect } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../constants/api';
 
 const { width } = Dimensions.get('window');
 
-export default function App() {
+export default function HomeScreen() {
+  const { user } = useAuth();
+  const [totalDebt, setTotalDebt] = useState<number | null>(null);
+
+  const forceFetch = React.useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const res = await fetch(API_URL(`/api/invoices/pending/${user.id}?cb=${Math.random()}`), {
+        headers: { "Bypass-Tunnel-Reminder": "true" },
+      });
+      const data = await res.json();
+      
+      if (Array.isArray(data) && data.length > 0) {
+        const debt = data.reduce((acc: number, inv: any) => acc + (inv.totalAmount - (inv.amountPaid || 0)), 0);
+        setTotalDebt(debt);
+      } else if (Array.isArray(data) && data.length === 0) {
+        setTotalDebt(0);
+      }
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+    }
+  }, [user]);
+
+  React.useEffect(() => {
+    forceFetch();
+  }, [forceFetch]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      forceFetch();
+    }, [forceFetch])
+  );
+  
   return (
     <SafeAreaView style={styles.container}>
       
-      {/* Balance Card */}
-      <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>BALANCE ACTUAL</Text>
-        <Text style={styles.balanceAmount}>$125</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>AL DÍA</Text>
-        </View>
+      {/* Header Logo */}
+      <View style={styles.homeHeader}>
+        <Image 
+          source={require("../../assets/images/logo.png")} 
+          style={{ width: 180, height: 60 }} 
+          resizeMode="contain" 
+        />
+        <Text style={styles.tenantNameText}>{user?.tenantName || 'Mi Condominio'}</Text>
       </View>
+
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      {/* Balance Card - Now Clickable */}
+      <TouchableOpacity activeOpacity={0.8} onPress={forceFetch}>
+        <LinearGradient 
+          colors={['#1e3a8a', '#312e81']} 
+          start={{ x: 0, y: 0 }} 
+          end={{ x: 1, y: 1 }} 
+          style={styles.balanceCard}
+        >
+          <Text style={styles.balanceLabel}>SALDO DEUDOR (Toca para actualizar)</Text>
+          <Text style={styles.balanceAmount}>
+            {totalDebt === null ? "..." : `$${Math.max(0, totalDebt).toFixed(2)}`}
+          </Text>
+          {totalDebt === null ? (
+            <View style={[styles.badge, { backgroundColor: 'transparent' }]} />
+          ) : totalDebt <= 0.01 ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>AL DÍA 🎉</Text>
+            </View>
+          ) : (
+            <View style={[styles.badge, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
+              <Text style={[styles.badgeText, { color: '#ef4444' }]}>PENDIENTE</Text>
+            </View>
+          )}
+        </LinearGradient>
+      </TouchableOpacity>
 
       {/* Grid of Action Buttons */}
       <View style={styles.gridContainer}>
         {/* Chat IA */}
-        <Link href="/chat" style={styles.gridItem}>
-          <View style={{alignItems: 'center'}}>
-            <LinearGradient colors={['#c084fc', '#ec4899']} style={styles.iconContainer}>
-              <Ionicons name="chatbubble-ellipses" size={32} color="white" />
-            </LinearGradient>
-            <Text style={styles.gridText}>Chat IA</Text>
-          </View>
-        </Link>
+        <View style={styles.gridItem}>
+          <Link href="/chat" asChild>
+            <TouchableOpacity style={{alignItems: 'center', width: '100%'}}>
+              <LinearGradient colors={['#c084fc', '#ec4899']} style={styles.iconContainer}>
+                <Ionicons name="chatbubble-ellipses" size={32} color="white" />
+              </LinearGradient>
+              <Text style={styles.gridText}>Chat IA</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
 
         {/* Reportar Pago */}
-        <Link href="/report-payment" style={styles.gridItem}>
-          <View style={{alignItems: 'center'}}>
-            <LinearGradient colors={['#fbbf24', '#f97316']} style={styles.iconContainer}>
-              <Ionicons name="card" size={32} color="white" />
-            </LinearGradient>
-            <Text style={styles.gridText}>Reportar Pago</Text>
-          </View>
-        </Link>
+        <View style={styles.gridItem}>
+          <Link href="/report-payment" asChild>
+            <TouchableOpacity style={{alignItems: 'center', width: '100%'}}>
+              <LinearGradient colors={['#fbbf24', '#f97316']} style={styles.iconContainer}>
+                <Ionicons name="card" size={32} color="white" />
+              </LinearGradient>
+              <Text style={styles.gridText}>Reportar Pago</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
 
         {/* Historial */}
-        <TouchableOpacity style={styles.gridItem}>
-          <LinearGradient colors={['#2dd4bf', '#0ea5e9']} style={styles.iconContainer}>
-            <Ionicons name="receipt" size={32} color="white" />
-          </LinearGradient>
-          <Text style={styles.gridText}>Historial</Text>
-        </TouchableOpacity>
+        <View style={styles.gridItem}>
+          <Link href="/history" asChild>
+            <TouchableOpacity style={{alignItems: 'center', width: '100%'}}>
+              <LinearGradient colors={['#2dd4bf', '#0ea5e9']} style={styles.iconContainer}>
+                <Ionicons name="receipt" size={32} color="white" />
+              </LinearGradient>
+              <Text style={styles.gridText}>Historial Pagos</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+
+        {/* Facturas */}
+        <View style={styles.gridItem}>
+          <Link href="/invoices" asChild>
+            <TouchableOpacity style={{alignItems: 'center', width: '100%'}}>
+              <LinearGradient colors={['#10b981', '#059669']} style={styles.iconContainer}>
+                <Ionicons name="document-text" size={32} color="white" />
+              </LinearGradient>
+              <Text style={styles.gridText}>Mis Facturas</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
 
         {/* Votos */}
-        <TouchableOpacity style={styles.gridItem}>
-          <LinearGradient colors={['#38bdf8', '#0284c7']} style={styles.iconContainer}>
-            <MaterialCommunityIcons name="checkbox-marked-outline" size={36} color="white" />
-          </LinearGradient>
-          <Text style={styles.gridText}>Votos</Text>
-        </TouchableOpacity>
+        <View style={styles.gridItem}>
+          <Link href="/voting" asChild>
+            <TouchableOpacity style={{alignItems: 'center', width: '100%'}}>
+              <LinearGradient colors={['#38bdf8', '#0284c7']} style={styles.iconContainer}>
+                <MaterialCommunityIcons name="checkbox-marked-outline" size={36} color="white" />
+              </LinearGradient>
+              <Text style={styles.gridText}>Votos</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+
+        {/* Comunicados */}
+        <View style={styles.gridItem}>
+          <Link href="/announcements" asChild>
+            <TouchableOpacity style={{alignItems: 'center', width: '100%'}}>
+              <LinearGradient colors={['#f43f5e', '#be123c']} style={styles.iconContainer}>
+                <Ionicons name="megaphone" size={36} color="white" />
+              </LinearGradient>
+              <Text style={styles.gridText}>Comunicados</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
       </View>
+      </ScrollView>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/')}>
           <Ionicons name="home" size={26} color="#3b82f6" />
           <Text style={[styles.navText, { color: '#3b82f6' }]}>Hogar</Text>
         </TouchableOpacity>
@@ -72,8 +172,16 @@ export default function App() {
           <MaterialCommunityIcons name="checkbox-marked" size={28} color="#64748b" />
           <Text style={styles.navText}>Votar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person" size={26} color="#64748b" />
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
+          {user?.avatarBase64 ? (
+            <Image 
+              source={{ uri: user.avatarBase64 }} 
+              style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: '#64748b' }} 
+              resizeMode="cover" 
+            />
+          ) : (
+            <Ionicons name="person" size={26} color="#64748b" />
+          )}
           <Text style={styles.navText}>Cuenta</Text>
         </TouchableOpacity>
       </View>
@@ -89,19 +197,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between'
   },
   
+  homeHeader: {
+    alignItems: 'center',
+    paddingTop: 20,
+    paddingBottom: 0,
+  },
+  tenantNameText: {
+    color: '#8a8a9d',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 8,
+    letterSpacing: 1,
+    textTransform: 'uppercase'
+  },
+
   // Balance Card
   balanceCard: {
-    margin: 24,
-    marginTop: 40,
-    padding: 30,
-    backgroundColor: '#0a0a16',
-    borderRadius: 40,
+    marginHorizontal: 20,
+    marginTop: 5,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#1e1e38',
-    alignItems: 'flex-start'
+    borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'flex-start',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
   },
-  balanceLabel: { color: '#8a8a9d', fontSize: 13, fontWeight: '700', letterSpacing: 1.5, marginBottom: 8 },
-  balanceAmount: { color: '#ffffff', fontSize: 72, fontWeight: '900', marginBottom: 20, letterSpacing: -2 },
+  balanceLabel: { color: '#8a8a9d', fontSize: 11, fontWeight: '700', letterSpacing: 1, marginBottom: 2 },
+  balanceAmount: { color: '#ffffff', fontSize: 46, fontWeight: '900', marginBottom: 6, letterSpacing: -1 },
   badge: { backgroundColor: 'rgba(52, 211, 153, 0.1)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   badgeText: { color: '#10b981', fontSize: 14, fontWeight: '900', letterSpacing: 0.5 },
 
@@ -109,23 +236,22 @@ const styles = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 30,
-    paddingHorizontal: 10,
-    marginBottom: 40
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 20
   },
   gridItem: {
-    width: (width / 2) - 40,
+    width: '46%', // 46% so there's an 8% gap in between
     alignItems: 'center',
-    marginBottom: 10
+    marginBottom: 20
   },
   iconContainer: {
-    width: 95,
-    height: 95,
-    borderRadius: 28,
+    width: 65,
+    height: 65,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -140,11 +266,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingHorizontal: 10,
     paddingVertical: 16,
-    backgroundColor: '#050512',
+    backgroundColor: '#0a0a16', // Ligeramente más claro
     borderTopWidth: 1,
     borderTopColor: '#1e1e38',
-    paddingBottom: 30 
+    paddingBottom: 40 // Más espacio inferior
   },
-  navItem: { alignItems: 'center', width: 60 },
-  navText: { color: '#64748b', fontSize: 11, marginTop: 6, fontWeight: '600' }
+  navItem: { alignItems: 'center', width: 70 },
+  navText: { color: '#94a3b8', fontSize: 13, marginTop: 6, fontWeight: '700' }
 });

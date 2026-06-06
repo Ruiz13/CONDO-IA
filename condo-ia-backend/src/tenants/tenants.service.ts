@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import * as bcrypt from 'bcrypt';
 
@@ -13,8 +13,13 @@ export class TenantsService {
     locales: number;
     aptAliquot: number;
     apiKey?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    phone?: string;
   }) {
-    const { name, floors, aptsPerFloor, locales, aptAliquot, apiKey } = data;
+    const { name, floors, aptsPerFloor, locales, aptAliquot, apiKey, address, city, state, country, phone } = data;
 
     // Validación Matemática de Alícuotas
     const totalApts = floors * aptsPerFloor;
@@ -36,7 +41,7 @@ export class TenantsService {
     return await this.prisma.$transaction(async (tx) => {
       // 1. Crear el Condominio
       const tenant = await tx.tenant.create({
-        data: { name }
+        data: { name, address, city, state, country, phone }
       });
 
       // TODO: Guardar el apiKey en algún lado seguro si fuera necesario en el esquema.
@@ -44,10 +49,15 @@ export class TenantsService {
       // Por MVP lo omitimos de la inserción a base de datos.
 
       // 2. Hash para la contraseña temporal genérica
-      const tempPasswordHash = await bcrypt.hash('CondoIA2026*', 10);
-
       // 3. Crear el Administrador
       const adminEmail = `admin@${name.replace(/\s+/g, '').toLowerCase()}.com`;
+      
+      const existingUser = await tx.user.findUnique({ where: { email: adminEmail } });
+      if (existingUser) {
+        throw new BadRequestException(`El correo genérico ${adminEmail} ya está en uso. Intenta con un nombre de edificio ligeramente distinto.`);
+      }
+
+      const tempPasswordHash = await bcrypt.hash('admin123', 10);
       await tx.user.create({
         data: {
           email: adminEmail,
@@ -118,6 +128,221 @@ export class TenantsService {
         totalApts,
         totalLocales: locales
       };
+    }, { timeout: 60000 });
+  }
+
+  // --- Funciones del Super Admin ---
+
+  async getAllTenants() {
+    return this.prisma.tenant.findMany({
+      include: {
+        users: {
+          where: { role: 'ADMIN' },
+          select: { email: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
     });
+  }
+
+  async deleteTenant(tenantId: string) {
+    return await this.prisma.$transaction(async (tx) => {
+      // Borrar todas las dependencias en orden inverso para respetar las claves foráneas
+      await tx.vote.deleteMany({ where: { poll: { tenantId } } });
+      await tx.pollOption.deleteMany({ where: { poll: { tenantId } } });
+      await tx.poll.deleteMany({ where: { tenantId } });
+      await tx.announcement.deleteMany({ where: { tenantId } });
+      await tx.payment.deleteMany({ where: { tenantId } });
+      await tx.invoice.deleteMany({ where: { tenantId } });
+      await tx.expense.deleteMany({ where: { tenantId } });
+      await tx.unit.deleteMany({ where: { tenantId } });
+      await tx.auditLog.deleteMany({ where: { tenantId } });
+      await tx.user.deleteMany({ where: { tenantId } });
+      await tx.tenant.delete({ where: { id: tenantId } });
+      
+      return { success: true, message: 'Edificio eliminado correctamente' };
+    }, { timeout: 60000 });
+  }
+
+  async toggleTenantStatus(tenantId: string) {
+    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId } });
+    if (!tenant) throw new BadRequestException('Condominio no encontrado');
+    return this.prisma.tenant.update({
+      where: { id: tenantId },
+      data: { isActive: !tenant.isActive }
+    });
+  }
+
+  async updateTenantLogo(tenantId: string, logoBase64: string) {
+    try {
+      await this.prisma.tenant.update({
+        where: { id: tenantId },
+        data: { logoBase64 }
+      });
+      return { message: 'Logo actualizado correctamente' };
+    } catch (error) {
+      console.error(`Error updating logo for tenant ${tenantId}`, error);
+      throw new HttpException('Error al actualizar el logo', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async updateTenantSettings(tenantId: string, data: { rif?: string; address?: string; phone?: string; city?: string; state?: string; country?: string }) {
+    try {
+      await this.prisma.tenant.update({
+        where: { id: tenantId },
+        data
+      });
+      return { message: 'Configuración actualizada correctamente' };
+    } catch (error) {
+      console.error(`Error updating settings for tenant ${tenantId}`, error);
+      throw new HttpException('Error al actualizar la configuración', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async resetAdminPassword(tenantId: string) {
+    // Buscar al usuario administrador del condominio
+    const admin = await this.prisma.user.findFirst({
+      where: { tenantId, role: 'ADMIN' }
+    });
+    if (!admin) throw new BadRequestException('Administrador no encontrado');
+
+    const tempPasswordHash = await bcrypt.hash('admin123', 10);
+    await this.prisma.user.update({
+      where: { id: admin.id },
+      data: { passwordHash: tempPasswordHash, mustChangePassword: true }
+    });
+
+    return { success: true, message: 'Clave reseteada a admin123 correctamente' };
+  }
+
+  async createTenantWithAdmin(data: { tenantName: string; adminEmail: string; adminPassword: string }) {
+    const { tenantName, adminEmail, adminPassword } = data;
+
+    const existingUser = await this.prisma.user.findUnique({ where: { email: adminEmail } });
+    if (existingUser) {
+      throw new BadRequestException('El correo del administrador ya está en uso');
+    }
+
+    const passwordHash = await bcrypt.hash(adminPassword, 10);
+
+    return await this.prisma.$transaction(async (tx) => {
+      const tenant = await tx.tenant.create({
+        data: { name: tenantName }
+      });
+
+      await tx.user.create({
+        data: {
+          email: adminEmail,
+          passwordHash,
+          role: 'ADMIN',
+          mustChangePassword: true,
+          tenantId: tenant.id
+        }
+      });
+
+      return { success: true, message: 'Edificio y Administrador creados con éxito', tenantId: tenant.id };
+    });
+  }
+
+  // --- Funciones del Administrador del Condominio ---
+
+  async getUnitsByTenant(tenantId: string) {
+    return this.prisma.unit.findMany({
+      where: { tenantId },
+      include: {
+        owner: { select: { id: true, email: true } },
+        invoices: true
+      },
+      orderBy: { unitNumber: 'asc' }
+    });
+  }
+
+  async createUnitAndOwner(tenantId: string, unitNumber: string, ownerEmail: string, ownerPassword: string, aliquotPercentage: number) {
+    const existingUser = await this.prisma.user.findUnique({ where: { email: ownerEmail } });
+    if (existingUser) {
+      throw new BadRequestException('El correo del propietario ya está en uso');
+    }
+
+    const passwordHash = await bcrypt.hash(ownerPassword, 10);
+
+    return await this.prisma.$transaction(async (tx) => {
+      const owner = await tx.user.create({
+        data: {
+          email: ownerEmail,
+          passwordHash,
+          role: 'RESIDENT',
+          mustChangePassword: true,
+          tenantId
+        }
+      });
+
+      const unit = await tx.unit.create({
+        data: {
+          tenantId,
+          ownerId: owner.id,
+          unitNumber,
+          isCommercial: false, // Por defecto para MVP
+          aliquotPercentage
+        }
+      });
+
+      return { success: true, unit };
+    });
+  }
+
+  async getTenantStats(tenantId: string) {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Ingresos del mes: pagos aprobados este mes
+    const ingresos = await this.prisma.payment.aggregate({
+      where: {
+        tenantId,
+        status: 'APPROVED',
+        createdAt: { gte: firstDayOfMonth }
+      },
+      _sum: { amount: true }
+    });
+
+    // Gastos del mes
+    const gastos = await this.prisma.expense.aggregate({
+      where: {
+        tenantId,
+        date: { gte: firstDayOfMonth }
+      },
+      _sum: { amount: true }
+    });
+
+    // Pagos por aprobar
+    const pagosPendientes = await this.prisma.payment.count({
+      where: { tenantId, status: 'PENDING' }
+    });
+
+    // Total de residentes (unidades)
+    const totalResidentes = await this.prisma.unit.count({
+      where: { tenantId }
+    });
+
+    return {
+      ingresosDelMes: ingresos._sum.amount || 0,
+      gastosDelMes: gastos._sum.amount || 0,
+      pagosPorAprobar: pagosPendientes,
+      totalResidentes
+    };
+  }
+
+  async getFinancialReport(tenantId: string) {
+    const payments = await this.prisma.payment.findMany({
+      where: { tenantId, status: 'APPROVED' },
+      include: { unit: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const expenses = await this.prisma.expense.findMany({
+      where: { tenantId },
+      orderBy: { date: 'desc' }
+    });
+
+    return { payments, expenses };
   }
 }

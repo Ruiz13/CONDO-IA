@@ -41,14 +41,13 @@ El ecosistema de Condo IA está compuesto por tres pilares fundamentales:
   * *Estado actual:* UI premium completamente funcional en emulador web.
 * **Módulo: Reportar Pago:**
   * Formulario para ingresar el Monto del pago y el Número de Referencia.
-  * **Captura de Comprobantes:** Integración con la cámara del dispositivo para tomar fotos del recibo en tiempo real, o explorar la galería para subir capturas de transferencias.
-  * Vista previa interactiva de la imagen adjuntada con opción para eliminarla.
-  * *Estado actual:* Interfaz y permisos de hardware completos. A la espera de conexión con base de datos para subir la imagen.
+  * **Ligereza y Velocidad:** Se decidió enviar únicamente los datos textuales a la base de datos, eliminando el peso de imágenes y escaneos OCR en esta pantalla para mayor agilidad.
+  * *Estado actual:* Interfaz conectada exitosamente a la base de datos (Supabase) mediante el backend en NestJS. Pagos entran con estado "PENDING".
 
 ---
 
 ## 📝 Próximos Pasos (Pendientes)
 *(Esta sección se irá actualizando conforme el usuario decida el rumbo del proyecto)*
-- [ ] Conectar la base de datos Supabase con la App Móvil para el envío real de reportes de pago.
-- [ ] Implementar la pantalla del "Chat IA" en la App Móvil.
-- [ ] Programar la lógica del Panel Administrativo para recibir, aprobar o rechazar los comprobantes enviados por los residentes.
+- [x] Conectar la base de datos Supabase con la App Móvil para el envío real de reportes de pago.
+- [x] Implementar la pantalla del "Chat IA" en la App Móvil (Conectada a Gemini).
+- [x] Programar la lógica del Panel Administrativo para recibir, aprobar o rechazar los comprobantes enviados por los residentes (Implementado en Backend).

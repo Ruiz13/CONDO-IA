@@ -52,7 +52,8 @@ export default function SuperAdminPage() {
     <div className="min-h-screen bg-[#050512] flex items-center justify-center p-6 font-[family-name:var(--font-geist-sans)]">
       <div className="w-full max-w-3xl bg-[#0a0a16] rounded-3xl border border-[#c084fc]/30 p-10 shadow-2xl shadow-[#c084fc]/10">
         
-        <div className="text-center mb-10">
+        <div className="text-center mb-10 flex flex-col items-center">
+          <img src="/logo.png" alt="Condo IA Logo" className="w-48 h-auto mb-6 drop-shadow-xl" />
           <h1 className="text-3xl font-bold text-white tracking-tight">
             Fábrica de Clientes <span className="text-[#c084fc]">(Super-Admin)</span>
           </h1>

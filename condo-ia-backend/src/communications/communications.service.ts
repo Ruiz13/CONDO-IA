@@ -5,9 +5,9 @@ import { PrismaService } from '../prisma.service';
 export class CommunicationsService {
   constructor(private prisma: PrismaService) {}
 
-  async createAnnouncement(tenantId: string, title: string, content: string) {
+  async createAnnouncement(tenantId: string, title: string, content: string, imageUrl?: string) {
     return this.prisma.announcement.create({
-      data: { tenantId, title, content }
+      data: { tenantId, title, content, imageUrl }
     });
   }
 
@@ -15,6 +15,12 @@ export class CommunicationsService {
     return this.prisma.announcement.findMany({
       where: { tenantId },
       orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async deleteAnnouncement(id: string) {
+    return this.prisma.announcement.delete({
+      where: { id }
     });
   }
 

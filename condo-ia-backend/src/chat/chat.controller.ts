@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { ChatService } from './chat.service';
 
 @Controller('api/chat')
@@ -12,5 +12,15 @@ export class ChatController {
     }
     const reply = await this.chatService.getAiResponse(message, userId);
     return { response: reply };
+  }
+
+  @Get(':userId')
+  async getHistory(@Param('userId') userId: string) {
+    return this.chatService.getChatHistory(userId);
+  }
+
+  @Get('audit/:tenantId')
+  async getAuditHistory(@Param('tenantId') tenantId: string) {
+    return this.chatService.getAuditHistory(tenantId);
   }
 }

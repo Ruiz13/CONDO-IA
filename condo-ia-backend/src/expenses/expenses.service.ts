@@ -5,13 +5,15 @@ import { PrismaService } from '../prisma.service';
 export class ExpensesService {
   constructor(private prisma: PrismaService) {}
 
-  async createExpense(tenantId: string, description: string, amount: number, appliesTo: string) {
+  async createExpense(tenantId: string, description: string, amount: number, appliesTo: string, providerName?: string, providerInvoice?: string) {
     return this.prisma.expense.create({
       data: {
         tenantId,
         description,
         amount,
-        appliesTo
+        appliesTo,
+        providerName,
+        providerInvoice
       }
     });
   }

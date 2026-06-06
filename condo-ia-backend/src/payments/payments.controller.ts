@@ -21,7 +21,12 @@ export class PaymentsController {
   }
 
   @Post('report')
-  reportPayment(@Body() body: { invoiceId: string, amount: number, referenceNumber: string }) {
+  reportPayment(@Body() body: { unitId: string, amount: number, referenceNumber: string }) {
     return this.paymentsService.reportPayment(body);
+  }
+
+  @Get('user/:userId')
+  getUserPayments(@Param('userId') userId: string) {
+    return this.paymentsService.getUserPayments(userId);
   }
 }

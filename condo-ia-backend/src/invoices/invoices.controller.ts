@@ -12,11 +12,9 @@ export class InvoicesController {
     return { success: true, message: 'Facturación iniciada.' };
   }
 
-  @Get('my-receipts')
-  async getMyReceipts(@Request() req: any) {
-    // req.user.id vendría inyectado por el AuthGuard (JWT)
-    const mockUserId = 'user-123'; 
-    return this.invoicesService.getMyReceipts(mockUserId);
+  @Get('user/:userId')
+  async getMyReceipts(@Param('userId') userId: string) {
+    return this.invoicesService.getMyReceipts(userId);
   }
 
   @Get('pending/:userId')

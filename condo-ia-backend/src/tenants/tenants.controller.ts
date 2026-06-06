@@ -46,6 +46,14 @@ export class TenantsController {
   ) {
     return this.tenantsService.createUnitAndOwner(tenantId, body.unitNumber, body.ownerEmail, body.ownerPassword, body.aliquotPercentage);
   }
+
+  @Delete(':tenantId/units/:unitId')
+  async deleteUnit(
+    @Param('tenantId') tenantId: string,
+    @Param('unitId') unitId: string
+  ) {
+    return this.tenantsService.deleteUnit(tenantId, unitId);
+  }
   @Get(':tenantId/stats')
   async getTenantStats(@Param('tenantId') tenantId: string) {
     return this.tenantsService.getTenantStats(tenantId);

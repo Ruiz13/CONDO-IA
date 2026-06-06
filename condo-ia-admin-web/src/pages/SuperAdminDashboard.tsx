@@ -37,7 +37,7 @@ export default function SuperAdminDashboard() {
 
   const fetchTenants = async () => {
     try {
-      const res = await fetch('http://localhost:3001/api/tenants'); // We need to create this endpoint
+      const res = await fetch('https://condo-ia-backend.onrender.com/api/tenants'); // We need to create this endpoint
       if (res.ok) {
         const data = await res.json();
         setTenants(data);
@@ -58,7 +58,7 @@ export default function SuperAdminDashboard() {
     if (!window.confirm(`¿Estás seguro de que quieres eliminar todo el condominio "${tenantName}"? Esta acción borrará a todos los residentes, asambleas y pagos. Es irreversible.`)) return;
     
     try {
-      const res = await fetch(`http://localhost:3001/api/tenants/${tenantId}`, {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${tenantId}`, {
         method: 'DELETE'
       });
       if (res.ok) {
@@ -87,7 +87,7 @@ export default function SuperAdminDashboard() {
 
     setCreating(true);
     try {
-      const res = await fetch('http://localhost:3001/api/tenants/onboard', {
+      const res = await fetch('https://condo-ia-backend.onrender.com/api/tenants/onboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -129,7 +129,7 @@ export default function SuperAdminDashboard() {
 
   const handleToggleStatus = async (tenantId: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/tenants/${tenantId}/toggle-status`, { method: 'PATCH' });
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${tenantId}/toggle-status`, { method: 'PATCH' });
       if (res.ok) {
         fetchTenants();
       } else {
@@ -145,7 +145,7 @@ export default function SuperAdminDashboard() {
     reader.onload = async () => {
       const base64String = reader.result as string;
       try {
-        const res = await fetch(`http://localhost:3001/api/tenants/${tenantId}/logo`, {
+        const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${tenantId}/logo`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ logoBase64: base64String })
@@ -166,7 +166,7 @@ export default function SuperAdminDashboard() {
   const handleResetPassword = async (tenantId: string) => {
     if (!window.confirm('¿Estás seguro de que quieres resetear la clave del administrador a "admin123"?')) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/tenants/${tenantId}/reset-admin-password`, { method: 'POST' });
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${tenantId}/reset-admin-password`, { method: 'POST' });
       if (res.ok) {
         alert('Clave reseteada a admin123 correctamente');
       } else {

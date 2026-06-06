@@ -40,8 +40,9 @@ export default function AdminDashboard() {
   const [uploadingDoc, setUploadingDoc] = useState(false);
 
   const [units, setUnits] = useState<any[]>([]);
-  const [newUnit, setNewUnit] = useState({ unitNumber: '', ownerEmail: '', ownerPassword: '', aliquotPercentage: '' });
-  const [creatingUnit, setCreatingUnit] = useState(false);
+  const [resetUnitEmail, setResetUnitEmail] = useState('');
+  const [newGenericPassword, setNewGenericPassword] = useState('admin123');
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   const [profileEmail, setProfileEmail] = useState('');
   const [profilePassword, setProfilePassword] = useState('');
@@ -97,7 +98,7 @@ export default function AdminDashboard() {
 
   const fetchTenantConfig = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/tenants/${user.tenantId}`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}`);
       if (res.ok) {
         const data = await res.json();
         setTenantRif(data.rif || '');
@@ -111,7 +112,7 @@ export default function AdminDashboard() {
 
   const fetchExpenses = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/expenses/${user.tenantId}`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/expenses/${user.tenantId}`);
       if (res.ok) {
         const data = await res.json();
         setExpenses(data);
@@ -123,7 +124,7 @@ export default function AdminDashboard() {
 
   const fetchPendingPayments = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/payments/pending`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/payments/pending`);
       if (res.ok) {
         const data = await res.json();
         setPendingPayments(data.filter((p: any) => p.tenantId === user.tenantId));
@@ -135,7 +136,7 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/tenants/${user.tenantId}/stats`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/stats`);
       if (res.ok) {
         const data = await res.json();
         setStats({
@@ -152,7 +153,7 @@ export default function AdminDashboard() {
 
   const fetchFinancialDataForCharts = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/tenants/${user.tenantId}/reports/financial`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/reports/financial`);
       if (res.ok) {
         const data = await res.json();
         setRawFinancialData(data);
@@ -288,7 +289,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setCreatingExpense(true);
     try {
-      const res = await fetch('http://localhost:3001/api/expenses', {
+      const res = await fetch('https://condo-ia-backend.onrender.com/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -317,7 +318,7 @@ export default function AdminDashboard() {
     if (!window.confirm('¿Estás seguro de generar las facturas del mes para todos los residentes usando los gastos actuales?')) return;
     setGeneratingInvoices(true);
     try {
-      const res = await fetch(`http://localhost:3001/api/billing/generate/${user.tenantId}`, {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/billing/generate/${user.tenantId}`, {
         method: 'POST'
       });
       const data = await res.json();
@@ -337,7 +338,7 @@ export default function AdminDashboard() {
   const handleApprovePayment = async (paymentId: string) => {
     setApprovingPayment(paymentId);
     try {
-      const res = await fetch(`http://localhost:3001/api/payments/${paymentId}/approve`, {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/payments/${paymentId}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminId: user.id })
@@ -357,7 +358,7 @@ export default function AdminDashboard() {
 
   const fetchUnits = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/tenants/${user.tenantId}/units`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/units`);
       if (res.ok) {
         const data = await res.json();
         setUnits(data);
@@ -368,31 +369,51 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCreateUnit = async (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCreatingUnit(true);
+    if (!resetUnitEmail) return;
+    if (!window.confirm(`¿Estás seguro de restablecer la contraseña a "${newGenericPassword}" para el residente?`)) return;
+    
+    setResettingPassword(true);
     try {
-      const res = await fetch(`http://localhost:3001/api/tenants/${user.tenantId}/units`, {
+      const res = await fetch('https://condo-ia-backend.onrender.com/api/auth/admin-reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          unitNumber: newUnit.unitNumber,
-          ownerEmail: newUnit.ownerEmail,
-          ownerPassword: newUnit.ownerPassword,
-          aliquotPercentage: parseFloat(newUnit.aliquotPercentage)
+          adminId: user.id,
+          targetEmail: resetUnitEmail,
+          newPassword: newGenericPassword
         })
       });
+      const data = await res.json();
       if (res.ok) {
-        setNewUnit({ unitNumber: '', ownerEmail: '', ownerPassword: '', aliquotPercentage: '' });
-        fetchUnits();
+        toast.success('Contraseña restablecida exitosamente');
+        setResetUnitEmail('');
       } else {
-        const err = await res.json();
-        alert(`Error al crear residente: ${err.message}`);
+        toast.error(`Error: ${data.message}`);
       }
     } catch (error) {
-      alert('Error de conexión');
+      toast.error('Error de conexión');
     } finally {
-      setCreatingUnit(false);
+      setResettingPassword(false);
+    }
+  };
+
+  const handleDeleteUnit = async (unitId: string, unitNumber: string) => {
+    if (!window.confirm(`ATENCIÓN: ¿Estás seguro de eliminar el apartamento ${unitNumber} y todo su historial de forma permanente?`)) return;
+    
+    try {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/units/${unitId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        toast.success(`Apartamento ${unitNumber} eliminado correctamente`);
+        fetchUnits();
+      } else {
+        toast.error('Error al eliminar apartamento');
+      }
+    } catch (error) {
+      toast.error('Error de conexión');
     }
   };
 
@@ -400,7 +421,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setUpdatingTenantConfig(true);
     try {
-      const res = await fetch(`http://localhost:3001/api/tenants/${user.tenantId}/settings`, {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/settings`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -425,7 +446,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setUpdatingProfile(true);
     try {
-      const res = await fetch('http://localhost:3001/api/auth/update-profile', {
+      const res = await fetch('https://condo-ia-backend.onrender.com/api/auth/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -450,7 +471,7 @@ export default function AdminDashboard() {
 
   const fetchPolls = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/communications/polls/${user.tenantId}`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/communications/polls/${user.tenantId}`);
       if (res.ok) {
         const data = await res.json();
         setPolls(data);
@@ -465,7 +486,7 @@ export default function AdminDashboard() {
     setCreatingPoll(true);
     const optionsArray = pollOptions.split(',').map(o => o.trim()).filter(o => o);
     try {
-      const res = await fetch('http://localhost:3001/api/communications/polls', {
+      const res = await fetch('https://condo-ia-backend.onrender.com/api/communications/polls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -490,7 +511,7 @@ export default function AdminDashboard() {
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/communications/announcements/${user.tenantId}`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/communications/announcements/${user.tenantId}`);
       if (res.ok) {
         const data = await res.json();
         setAnnouncements(data);
@@ -502,7 +523,7 @@ export default function AdminDashboard() {
 
   const fetchAuditMessages = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/chat/audit/${user.tenantId}`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/chat/audit/${user.tenantId}`);
       if (res.ok) {
         const data = await res.json();
         setAuditMessages(data);
@@ -514,7 +535,7 @@ export default function AdminDashboard() {
 
   const fetchKnowledgeDocs = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/knowledge/${user.tenantId}`);
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/knowledge/${user.tenantId}`);
       if (res.ok) {
         const data = await res.json();
         setKnowledgeDocs(data);
@@ -531,7 +552,7 @@ export default function AdminDashboard() {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      const res = await fetch(`http://localhost:3001/api/knowledge/${user.tenantId}/upload`, {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/knowledge/${user.tenantId}/upload`, {
         method: 'POST',
         body: formData
       });
@@ -553,7 +574,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     setUploadingDoc(true);
     try {
-      const res = await fetch(`http://localhost:3001/api/knowledge/${user.tenantId}/text`, {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/knowledge/${user.tenantId}/text`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: newDocTitle, content: newDocText })
@@ -577,7 +598,7 @@ export default function AdminDashboard() {
     // Usamos toast personalizado o confirmación simple
     if (!window.confirm('¿Seguro que deseas eliminar este documento? La IA ya no lo usará para responder.')) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/knowledge/${id}`, { method: 'DELETE' });
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/knowledge/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchKnowledgeDocs();
         toast.success('Documento eliminado correctamente');
@@ -599,7 +620,7 @@ export default function AdminDashboard() {
         const formData = new FormData();
         formData.append('file', announcementImage);
         
-        const uploadRes = await fetch('http://localhost:3001/api/communications/announcements/upload', {
+        const uploadRes = await fetch('https://condo-ia-backend.onrender.com/api/communications/announcements/upload', {
           method: 'POST',
           body: formData
         });
@@ -615,7 +636,7 @@ export default function AdminDashboard() {
       }
 
       // Luego creamos el comunicado
-      const res = await fetch('http://localhost:3001/api/communications/announcements', {
+      const res = await fetch('https://condo-ia-backend.onrender.com/api/communications/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -645,7 +666,7 @@ export default function AdminDashboard() {
   const handleDeleteAnnouncement = async (id: string) => {
     if (!window.confirm('¿Seguro que deseas eliminar este comunicado?')) return;
     try {
-      const res = await fetch(`http://localhost:3001/api/communications/announcements/${id}`, { method: 'DELETE' });
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/communications/announcements/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchAnnouncements();
         toast.success('Comunicado eliminado correctamente');
@@ -903,52 +924,39 @@ export default function AdminDashboard() {
         {activeTab === 'residentes' && (
           <div className="space-y-6">
             <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
-              <h3 className="text-xl font-bold mb-4">Registrar Nuevo Apartamento</h3>
-              <form onSubmit={handleCreateUnit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h3 className="text-xl font-bold mb-4">Restablecer Clave de Acceso</h3>
+              <p className="text-sm text-gray-400 mb-6">Selecciona el residente y asígnale una clave temporal si ha perdido su acceso.</p>
+              <form onSubmit={handleResetPassword} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Número de Apartamento (Ej: Apto 1-A)</label>
+                  <label className="block text-sm text-gray-400 mb-1">Seleccionar Apartamento</label>
+                  <select
+                    value={resetUnitEmail}
+                    onChange={(e) => setResetUnitEmail(e.target.value)}
+                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
+                    required
+                  >
+                    <option value="" disabled>Selecciona un residente...</option>
+                    {units.map((unit) => (
+                      <option key={unit.id} value={unit.owner?.email}>
+                        {unit.unitNumber} - {unit.owner?.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Nueva Clave Temporal</label>
                   <input
                     type="text"
-                    value={newUnit.unitNumber}
-                    onChange={(e) => setNewUnit({ ...newUnit, unitNumber: e.target.value })}
+                    value={newGenericPassword}
+                    onChange={(e) => setNewGenericPassword(e.target.value)}
                     className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
                     required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Correo del Propietario</label>
-                  <input
-                    type="email"
-                    value={newUnit.ownerEmail}
-                    onChange={(e) => setNewUnit({ ...newUnit, ownerEmail: e.target.value })}
-                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Contraseña Inicial</label>
-                  <input
-                    type="text"
-                    value={newUnit.ownerPassword}
-                    onChange={(e) => setNewUnit({ ...newUnit, ownerPassword: e.target.value })}
-                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Alícuota (%)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={newUnit.aliquotPercentage}
-                    onChange={(e) => setNewUnit({ ...newUnit, aliquotPercentage: e.target.value })}
-                    className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none"
-                    required
+                    placeholder="ej. admin123"
                   />
                 </div>
                 <div className="md:col-span-2 mt-2">
-                  <button type="submit" disabled={creatingUnit} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
-                    {creatingUnit ? 'Registrando...' : '+ Añadir Residente'}
+                  <button type="submit" disabled={resettingPassword || !resetUnitEmail} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
+                    {resettingPassword ? 'Actualizando...' : 'Restablecer Contraseña'}
                   </button>
                 </div>
               </form>
@@ -966,6 +974,7 @@ export default function AdminDashboard() {
                         <th className="p-3 font-medium">Apartamento</th>
                         <th className="p-3 font-medium">Propietario (Correo)</th>
                         <th className="p-3 font-medium">Alícuota</th>
+                        <th className="p-3 font-medium text-right">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -974,6 +983,15 @@ export default function AdminDashboard() {
                           <td className="p-3 font-bold text-white">{unit.unitNumber}</td>
                           <td className="p-3 text-gray-300">{unit.owner?.email}</td>
                           <td className="p-3 text-indigo-400">{unit.aliquotPercentage}%</td>
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={() => handleDeleteUnit(unit.id, unit.unitNumber)}
+                              className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                              title="Eliminar Residente"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1315,12 +1333,12 @@ export default function AdminDashboard() {
                                 <FileText className="w-6 h-6 text-indigo-400" />
                                 <span className="text-sm text-indigo-200">Documento Adjunto</span>
                               </div>
-                              <a href={`http://localhost:3001${ann.imageUrl}`} target="_blank" rel="noreferrer" className="px-3 py-1 bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 text-xs rounded-lg transition-colors">
+                              <a href={`https://condo-ia-backend.onrender.com${ann.imageUrl}`} target="_blank" rel="noreferrer" className="px-3 py-1 bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 text-xs rounded-lg transition-colors">
                                 Ver PDF
                               </a>
                             </div>
                           ) : (
-                            <img src={`http://localhost:3001${ann.imageUrl}`} alt="Adjunto" className="w-full h-auto object-cover" />
+                            <img src={`https://condo-ia-backend.onrender.com${ann.imageUrl}`} alt="Adjunto" className="w-full h-auto object-cover" />
                           )}
                         </div>
                       )}

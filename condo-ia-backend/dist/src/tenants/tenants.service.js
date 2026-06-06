@@ -152,6 +152,8 @@ let TenantsService = class TenantsService {
     }
     async deleteTenant(tenantId) {
         return await this.prisma.$transaction(async (tx) => {
+            await tx.knowledgeDocument.deleteMany({ where: { tenantId } });
+            await tx.message.deleteMany({ where: { tenantId } });
             await tx.vote.deleteMany({ where: { poll: { tenantId } } });
             await tx.pollOption.deleteMany({ where: { poll: { tenantId } } });
             await tx.poll.deleteMany({ where: { tenantId } });

@@ -108,4 +108,33 @@ export class AuthService {
     });
     return { success: true, message: 'Avatar actualizado' };
   }
+
+  async adminResetPassword(adminId: string, targetEmail: string, newPasswordPlain: string) {
+    const admin = await this.prisma.user.findUnique({ where: { id: adminId } });
+    if (!admin || (admin.role !== 'ADMIN' && admin.role !== 'SUPER_ADMIN')) {
+      throw new UnauthorizedException('No tienes permisos para realizar esta acción');
+    }
+
+    const targetUser = await this.prisma.user.findUnique({ where: { email: targetEmail } });
+    if (!targetUser) {
+      throw new BadRequestException('El usuario especificado no existe');
+    }
+
+    // Si es ADMIN, solo puede cambiar de su propio tenant
+    if (admin.role === 'ADMIN' && targetUser.tenantId !== admin.tenantId) {
+      throw new UnauthorizedException('No tienes permisos para modificar a este usuario');
+    }
+
+    const passwordHash = await bcrypt.hash(newPasswordPlain, 10);
+    
+    await this.prisma.user.update({
+      where: { id: targetUser.id },
+      data: { 
+        passwordHash,
+        mustChangePassword: true // Opcional: forzar al usuario a cambiarla al entrar
+      }
+    });
+
+    return { success: true, message: 'Clave restablecida correctamente' };
+  }
 }

@@ -347,4 +347,26 @@ export class TenantsService {
 
     return { payments, expenses };
   }
+
+  async deleteUnit(tenantId: string, unitId: string) {
+    return await this.prisma.$transaction(async (tx) => {
+      const unit = await tx.unit.findUnique({ where: { id: unitId, tenantId } });
+      if (!unit) throw new BadRequestException('Apartamento no encontrado');
+
+      // Borrar facturas y pagos
+      await tx.payment.deleteMany({ where: { unitId } });
+      await tx.invoice.deleteMany({ where: { unitId } });
+      
+      // Borrar el apartamento
+      await tx.unit.delete({ where: { id: unitId } });
+
+      // Si tiene usuario asociado, borrar sus mensajes y el usuario
+      if (unit.ownerId) {
+        await tx.message.deleteMany({ where: { userId: unit.ownerId } });
+        await tx.user.delete({ where: { id: unit.ownerId } });
+      }
+
+      return { success: true, message: 'Residente eliminado correctamente' };
+    });
+  }
 }

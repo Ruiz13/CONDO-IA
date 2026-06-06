@@ -173,10 +173,8 @@ export default function AdminDashboard() {
 
   // Efecto para filtrar la data financiera localmente
   useEffect(() => {
-    if (!rawFinancialData.payments.length && !rawFinancialData.expenses.length) return;
-
-    let filteredPayments = rawFinancialData.payments;
-    let filteredExpenses = rawFinancialData.expenses;
+    let filteredPayments = rawFinancialData.payments || [];
+    let filteredExpenses = rawFinancialData.expenses || [];
 
     if (selectedYear !== 'ALL') {
       filteredPayments = filteredPayments.filter(p => new Date(p.createdAt).getFullYear().toString() === selectedYear);

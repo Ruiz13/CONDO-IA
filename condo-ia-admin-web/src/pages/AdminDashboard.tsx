@@ -915,7 +915,7 @@ export default function AdminDashboard() {
               <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
                 <h3 className="text-xl font-bold mb-6">Estado de Morosidad (Mes Actual)</h3>
                 <div className="h-64 w-full">
-                  {stats.morosidadData && stats.morosidadData.length > 0 ? (
+                  {stats.morosidadData && stats.morosidadData.length > 0 && stats.morosidadData.reduce((acc: number, curr: any) => acc + curr.value, 0) > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -938,7 +938,7 @@ export default function AdminDashboard() {
                     </ResponsiveContainer>
                   ) : (
                     <div className="h-full flex items-center justify-center text-gray-500">
-                      <p>No hay datos de morosidad disponibles.</p>
+                      <p>Aún no hay recibos emitidos en el mes.</p>
                     </div>
                   )}
                 </div>

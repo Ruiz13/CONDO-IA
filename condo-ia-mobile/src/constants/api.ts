@@ -6,8 +6,8 @@ const DEFAULT_BACKEND_PORT = process.env.API_PORT ?? "3001";
 // En simulador Android, `localhost` del host se mapea a 10.0.2.2
 const LOCAL_HOST = Platform.OS === "android" ? "10.0.2.2" : "localhost";
 
-const DEV_BASE = `http://${LOCAL_HOST}:${DEFAULT_BACKEND_PORT}`;
-const PROD_BASE = "https://condoia-api-2026.loca.lt";
+const DEV_BASE = "https://condo-ia-backend.onrender.com";
+const PROD_BASE = "https://condo-ia-backend.onrender.com";
 
 // En modo desarrollo usamos el backend local (emulador), en producción la URL remota
 export const BASE_URL =

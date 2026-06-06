@@ -321,6 +321,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteExpense = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este gasto?')) return;
+    try {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/expenses/${id}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        alert('Gasto eliminado exitosamente');
+        fetchExpenses();
+      } else {
+        alert('Error al eliminar gasto');
+      }
+    } catch (e) {
+      alert('Error de conexión');
+    }
+  };
+
   const handleApprovePayment = async (paymentId: string) => {
     setApprovingPayment(paymentId);
     try {
@@ -1168,7 +1185,7 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
-              {expenses.length === 0 ? (
+              {expenses.filter((e: any) => !e.isBilled).length === 0 ? (
                 <p className="text-gray-400 text-center py-8">No has registrado gastos para este mes.</p>
               ) : (
                 <div className="overflow-x-auto">
@@ -1178,11 +1195,13 @@ export default function AdminDashboard() {
                         <th className="p-3 font-medium">Descripción</th>
                         <th className="p-3 font-medium">Aplica a</th>
                         <th className="p-3 font-medium text-right">Monto</th>
+                        <th className="p-3 font-medium text-center">Acción</th>
                       </tr>
                     </thead>
                     <tbody>
                       {expenses
-                        .filter(expense => expense.description.toLowerCase().includes(searchTermFinanzas.toLowerCase()) || expense.providerName?.toLowerCase().includes(searchTermFinanzas.toLowerCase()))
+                        .filter((expense: any) => !expense.isBilled)
+                        .filter((expense: any) => expense.description.toLowerCase().includes(searchTermFinanzas.toLowerCase()) || expense.providerName?.toLowerCase().includes(searchTermFinanzas.toLowerCase()))
                         .map((expense: any) => (
                         <tr key={expense.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                           <td className="p-3 text-white">{expense.description}</td>
@@ -1190,6 +1209,15 @@ export default function AdminDashboard() {
                             {expense.appliesTo === 'ALL' ? 'Todos' : 'Solo Apartamentos'}
                           </td>
                           <td className="p-3 text-emerald-400 font-bold text-right">${expense.amount.toFixed(2)}</td>
+                          <td className="p-3 text-center">
+                            <button
+                              onClick={() => handleDeleteExpense(expense.id)}
+                              title="Eliminar gasto"
+                              className="text-red-400 hover:text-white p-2 hover:bg-red-500 rounded-lg transition-all duration-200 transform hover:scale-110"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

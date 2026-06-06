@@ -35,6 +35,11 @@ let ExpensesService = class ExpensesService {
             orderBy: { date: 'desc' }
         });
     }
+    async deleteExpense(id) {
+        return this.prisma.expense.delete({
+            where: { id }
+        });
+    }
 };
 exports.ExpensesService = ExpensesService;
 exports.ExpensesService = ExpensesService = __decorate([

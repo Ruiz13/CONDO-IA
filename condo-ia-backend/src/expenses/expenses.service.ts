@@ -24,4 +24,10 @@ export class ExpensesService {
       orderBy: { date: 'desc' }
     });
   }
+
+  async deleteExpense(id: string) {
+    return this.prisma.expense.delete({
+      where: { id }
+    });
+  }
 }

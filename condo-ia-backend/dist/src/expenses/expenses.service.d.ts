@@ -28,4 +28,17 @@ export declare class ExpensesService {
         providerName: string | null;
         providerInvoice: string | null;
     }[]>;
+    deleteExpense(id: string): Promise<{
+        id: string;
+        tenantId: string;
+        amount: number;
+        date: Date;
+        description: string;
+        isExtraordinary: boolean;
+        expenseCategory: string;
+        appliesTo: string;
+        isBilled: boolean;
+        providerName: string | null;
+        providerInvoice: string | null;
+    }>;
 }

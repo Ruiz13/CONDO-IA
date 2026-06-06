@@ -35,6 +35,9 @@ let TenantsController = class TenantsController {
     async createUnitAndOwner(tenantId, body) {
         return this.tenantsService.createUnitAndOwner(tenantId, body.unitNumber, body.ownerEmail, body.ownerPassword, body.aliquotPercentage);
     }
+    async deleteUnit(tenantId, unitId) {
+        return this.tenantsService.deleteUnit(tenantId, unitId);
+    }
     async getTenantStats(tenantId) {
         return this.tenantsService.getTenantStats(tenantId);
     }
@@ -93,6 +96,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], TenantsController.prototype, "createUnitAndOwner", null);
+__decorate([
+    (0, common_1.Delete)(':tenantId/units/:unitId'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __param(1, (0, common_1.Param)('unitId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "deleteUnit", null);
 __decorate([
     (0, common_1.Get)(':tenantId/stats'),
     __param(0, (0, common_1.Param)('tenantId')),

@@ -12,6 +12,7 @@ var BillingService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BillingService = void 0;
 const common_1 = require("@nestjs/common");
+const schedule_1 = require("@nestjs/schedule");
 const prisma_service_1 = require("../prisma.service");
 const pdf_service_1 = require("../pdf/pdf.service");
 const email_service_1 = require("../email/email.service");
@@ -88,8 +89,43 @@ let BillingService = BillingService_1 = class BillingService {
             throw new common_1.HttpException(error.message || 'Error interno al generar facturación', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    async processAllTenantsMonthlyBilling() {
+        this.logger.log('Iniciando proceso CRON de facturación mensual automática...');
+        try {
+            const activeTenants = await this.prisma.tenant.findMany({
+                where: { isActive: true }
+            });
+            for (const tenant of activeTenants) {
+                try {
+                    this.logger.log(`Procesando facturación para el condominio: ${tenant.name} (${tenant.id})`);
+                    await this.generateMonthlyBilling(tenant.id);
+                }
+                catch (error) {
+                    if (error.getStatus && error.getStatus() === common_1.HttpStatus.BAD_REQUEST) {
+                        this.logger.log(`Condominio ${tenant.name}: No hay gastos pendientes este mes.`);
+                    }
+                    else {
+                        this.logger.error(`Error procesando facturación para condominio ${tenant.name}`, error);
+                    }
+                }
+            }
+            this.logger.log('Proceso CRON de facturación completado.');
+        }
+        catch (error) {
+            this.logger.error('Fallo crítico en el proceso CRON de facturación general', error);
+        }
+    }
 };
 exports.BillingService = BillingService;
+__decorate([
+    (0, schedule_1.Cron)('0 0 1 * * *', {
+        name: 'monthly-billing',
+        timeZone: 'America/Caracas'
+    }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], BillingService.prototype, "processAllTenantsMonthlyBilling", null);
 exports.BillingService = BillingService = BillingService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,

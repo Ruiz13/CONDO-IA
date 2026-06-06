@@ -32,6 +32,9 @@ let AuthController = class AuthController {
     updateProfile(body) {
         return this.authService.updateProfile(body.userId, body.newEmail, body.newPassword);
     }
+    adminResetPassword(body) {
+        return this.authService.adminResetPassword(body.adminId, body.targetEmail, body.newPassword || 'admin123');
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -62,6 +65,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "updateProfile", null);
+__decorate([
+    (0, common_1.Post)('admin-reset-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "adminResetPassword", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('api/auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

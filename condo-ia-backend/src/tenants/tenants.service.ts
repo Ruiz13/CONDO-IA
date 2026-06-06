@@ -325,11 +325,49 @@ export class TenantsService {
       where: { tenantId }
     });
 
+    // Morosidad del mes actual
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const pagados = await this.prisma.invoice.count({
+      where: { tenantId, month, year, status: 'PAID' }
+    });
+    const pendientes = await this.prisma.invoice.count({
+      where: { tenantId, month, year, status: 'PENDING' }
+    });
+    const morosidadData = [
+      { name: 'Solventes', value: pagados },
+      { name: 'Morosos', value: pendientes }
+    ];
+
+    // Consultas IA en los últimos 7 días
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    const recentMessages = await this.prisma.message.findMany({
+      where: { tenantId, isBot: false, createdAt: { gte: sevenDaysAgo } },
+      select: { createdAt: true }
+    });
+    
+    const consultasMap = new Map();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(now.getDate() - i);
+      consultasMap.set(d.toISOString().split('T')[0], 0);
+    }
+    recentMessages.forEach(m => {
+      const dStr = m.createdAt.toISOString().split('T')[0];
+      if (consultasMap.has(dStr)) {
+        consultasMap.set(dStr, consultasMap.get(dStr) + 1);
+      }
+    });
+    const consultasIA = Array.from(consultasMap.entries()).map(([date, count]) => ({ date, count }));
+
     return {
       ingresosDelMes: ingresos._sum.amount || 0,
       gastosDelMes: gastos._sum.amount || 0,
       pagosPorAprobar: pagosPendientes,
-      totalResidentes
+      totalResidentes,
+      morosidadData,
+      consultasIA
     };
   }
 

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, Users, Vote, LayoutDashboard, Settings, FileText, Loader2, Megaphone, Bot, Trash2, TrendingUp, TrendingDown, Clock, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+const PIE_COLORS = ['#34d399', '#f472b6']; // Emerald para Solventes, Pink para Morosos
 import html2canvas from 'html2canvas';
 
 export default function AdminDashboard() {
@@ -17,7 +18,7 @@ export default function AdminDashboard() {
   const [selectedMonth, setSelectedMonth] = useState('ALL'); // 'ALL' o '0' a '11'
   const [rawFinancialData, setRawFinancialData] = useState<{payments: any[], expenses: any[]}>({ payments: [], expenses: [] });
 
-  const [stats, setStats] = useState({ ingresosDelMes: 0, gastosDelMes: 0, pagosPorAprobar: 0, totalResidentes: 0 });
+  const [stats, setStats] = useState<{ingresosDelMes: number, gastosDelMes: number, pagosPorAprobar: number, totalResidentes: number, morosidadData: any[], consultasIA: any[]}>({ ingresosDelMes: 0, gastosDelMes: 0, pagosPorAprobar: 0, totalResidentes: 0, morosidadData: [], consultasIA: [] });
   const [financialData, setFinancialData] = useState<any[]>([]);
   const chartRef = useRef<HTMLDivElement>(null);
   const [polls, setPolls] = useState<any[]>([]);
@@ -43,8 +44,6 @@ export default function AdminDashboard() {
   const [resetUnitEmail, setResetUnitEmail] = useState('');
   const [newGenericPassword, setNewGenericPassword] = useState('admin123');
   const [resettingPassword, setResettingPassword] = useState(false);
-  const [newUnit, setNewUnit] = useState({ unitNumber: '', ownerEmail: '', ownerPassword: '', aliquotPercentage: '' });
-  const [creatingUnit, setCreatingUnit] = useState(false);
 
   const [profileEmail, setProfileEmail] = useState('');
   const [profilePassword, setProfilePassword] = useState('');
@@ -62,6 +61,10 @@ export default function AdminDashboard() {
   const [generatingInvoices, setGeneratingInvoices] = useState(false);
   const [pendingPayments, setPendingPayments] = useState<any[]>([]);
   const [approvingPayment, setApprovingPayment] = useState<string | null>(null);
+
+  // Filtros de Búsqueda
+  const [searchTermResidentes, setSearchTermResidentes] = useState('');
+  const [searchTermFinanzas, setSearchTermFinanzas] = useState('');
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -141,12 +144,15 @@ export default function AdminDashboard() {
       const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/stats`);
       if (res.ok) {
         const data = await res.json();
-        setStats({
+        setStats(prev => ({
+          ...prev,
           ingresosDelMes: data.ingresosDelMes || 0,
           gastosDelMes: data.gastosDelMes || 0,
           pagosPorAprobar: data.pagosPorAprobar || 0,
-          totalResidentes: data.totalResidentes || 0
-        });
+          totalResidentes: data.totalResidentes || 0,
+          morosidadData: data.morosidadData || [],
+          consultasIA: data.consultasIA || []
+        }));
       }
     } catch (e) {
       console.error(e);
@@ -371,34 +377,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCreateUnit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreatingUnit(true);
-    try {
-      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/units`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          unitNumber: newUnit.unitNumber,
-          ownerEmail: newUnit.ownerEmail,
-          ownerPassword: newUnit.ownerPassword,
-          aliquotPercentage: parseFloat(newUnit.aliquotPercentage)
-        })
-      });
-      if (res.ok) {
-        setNewUnit({ unitNumber: '', ownerEmail: '', ownerPassword: '', aliquotPercentage: '' });
-        fetchUnits();
-        toast.success('Residente registrado exitosamente');
-      } else {
-        const err = await res.json();
-        toast.error(`Error al registrar residente: ${err.message}`);
-      }
-    } catch (error) {
-      toast.error('Error de conexión');
-    } finally {
-      setCreatingUnit(false);
-    }
-  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -427,24 +405,6 @@ export default function AdminDashboard() {
       toast.error('Error de conexión');
     } finally {
       setResettingPassword(false);
-    }
-  };
-
-  const handleDeleteUnit = async (unitId: string, unitNumber: string) => {
-    if (!window.confirm(`ATENCIÓN: ¿Estás seguro de eliminar el apartamento ${unitNumber} y todo su historial de forma permanente?`)) return;
-    
-    try {
-      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/units/${unitId}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) {
-        toast.success(`Apartamento ${unitNumber} eliminado correctamente`);
-        fetchUnits();
-      } else {
-        toast.error('Error al eliminar apartamento');
-      }
-    } catch (error) {
-      toast.error('Error de conexión');
     }
   };
 
@@ -949,6 +909,66 @@ export default function AdminDashboard() {
                 )}
               </div>
             </div>
+            {/* Gráficos Adicionales: Morosidad y Consultas IA */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+              {/* Gráfico de Morosidad */}
+              <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold mb-6">Estado de Morosidad (Mes Actual)</h3>
+                <div className="h-64 w-full">
+                  {stats.morosidadData && stats.morosidadData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={stats.morosidadData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, percent }) => percent !== undefined ? `${name} ${(percent * 100).toFixed(0)}%` : name}
+                        >
+                          {stats.morosidadData.map((_entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip contentStyle={{ backgroundColor: '#0a0a16', borderColor: '#ffffff20', color: '#fff' }} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-gray-500">
+                      <p>No hay datos de morosidad disponibles.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Gráfico de Consultas IA */}
+              <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
+                <h3 className="text-xl font-bold mb-6">Uso de la IA (Últimos 7 días)</h3>
+                <div className="h-64 w-full">
+                  {stats.consultasIA && stats.consultasIA.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats.consultasIA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                        <XAxis dataKey="date" stroke="#9ca3af" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                        <YAxis stroke="#9ca3af" tick={{ fill: '#9ca3af' }} allowDecimals={false} />
+                        <RechartsTooltip 
+                          contentStyle={{ backgroundColor: '#0a0a16', borderColor: '#ffffff20', color: '#fff', borderRadius: '8px' }}
+                          cursor={{fill: '#ffffff10'}}
+                        />
+                        <Bar dataKey="count" fill="#818cf8" radius={[4, 4, 0, 0]} barSize={30} name="Consultas" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-gray-500">
+                      <p>No hay consultas recientes.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -994,11 +1014,43 @@ export default function AdminDashboard() {
             </div>
 
             <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
-              <h3 className="text-xl font-bold mb-4">Lista de Residentes</h3>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h3 className="text-xl font-bold">Lista de Residentes</h3>
+                <div className="flex gap-3 w-full md:w-auto">
+                  <input
+                    type="text"
+                    placeholder="Buscar por apartamento o correo..."
+                    value={searchTermResidentes}
+                    onChange={(e) => setSearchTermResidentes(e.target.value)}
+                    className="flex-1 bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-indigo-500"
+                  />
+                  <button 
+                    onClick={() => {
+                      const ws = XLSX.utils.json_to_sheet(
+                        units
+                          .filter(u => u.unitNumber.toLowerCase().includes(searchTermResidentes.toLowerCase()) || u.owner?.email?.toLowerCase().includes(searchTermResidentes.toLowerCase()))
+                          .map(u => ({ Apartamento: u.unitNumber, Correo: u.owner?.email || 'N/A', Alicuota: `${u.aliquotPercentage}%` }))
+                      );
+                      const wb = XLSX.utils.book_new();
+                      XLSX.utils.book_append_sheet(wb, ws, 'Residentes');
+                      XLSX.writeFile(wb, 'Lista_Residentes.csv');
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 rounded-xl font-medium shadow-lg transition-all text-sm whitespace-nowrap"
+                  >
+                    <Download className="w-4 h-4" /> CSV
+                  </button>
+                  <button 
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium shadow-lg transition-all text-sm whitespace-nowrap"
+                  >
+                    <FileText className="w-4 h-4" /> PDF
+                  </button>
+                </div>
+              </div>
               {units.length === 0 ? (
                 <p className="text-gray-400 text-center py-8">No hay apartamentos registrados aún.</p>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" id="table-residentes">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-white/10 text-gray-400">
@@ -1008,7 +1060,9 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {units.map((unit: any) => (
+                      {units
+                        .filter(unit => unit.unitNumber.toLowerCase().includes(searchTermResidentes.toLowerCase()) || unit.owner?.email?.toLowerCase().includes(searchTermResidentes.toLowerCase()))
+                        .map((unit: any) => (
                         <tr key={unit.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                           <td className="p-3 font-bold text-white">{unit.unitNumber}</td>
                           <td className="p-3 text-gray-300">{unit.owner?.email}</td>
@@ -1109,7 +1163,39 @@ export default function AdminDashboard() {
             </div>
 
             <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
-              <h3 className="text-xl font-bold mb-4">Gastos del Mes</h3>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h3 className="text-xl font-bold">Gastos del Mes</h3>
+                <div className="flex gap-3 w-full md:w-auto">
+                  <input
+                    type="text"
+                    placeholder="Buscar gastos, residentes o pagos..."
+                    value={searchTermFinanzas}
+                    onChange={(e) => setSearchTermFinanzas(e.target.value)}
+                    className="flex-1 bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-indigo-500"
+                  />
+                  <button 
+                    onClick={() => {
+                      const ws = XLSX.utils.json_to_sheet(
+                        expenses
+                          .filter(e => e.description.toLowerCase().includes(searchTermFinanzas.toLowerCase()) || e.providerName?.toLowerCase().includes(searchTermFinanzas.toLowerCase()))
+                          .map((e: any) => ({ Descripcion: e.description, Aplica: e.appliesTo === 'ALL' ? 'Todos' : 'Solo Apartamentos', Monto: e.amount }))
+                      );
+                      const wb = XLSX.utils.book_new();
+                      XLSX.utils.book_append_sheet(wb, ws, 'Gastos');
+                      XLSX.writeFile(wb, 'Gastos_Mes.csv');
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 rounded-xl font-medium shadow-lg transition-all text-sm whitespace-nowrap"
+                  >
+                    <Download className="w-4 h-4" /> CSV
+                  </button>
+                  <button 
+                    onClick={() => window.print()}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium shadow-lg transition-all text-sm whitespace-nowrap"
+                  >
+                    <FileText className="w-4 h-4" /> PDF
+                  </button>
+                </div>
+              </div>
               {expenses.length === 0 ? (
                 <p className="text-gray-400 text-center py-8">No has registrado gastos para este mes.</p>
               ) : (
@@ -1123,7 +1209,9 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {expenses.map((expense: any) => (
+                      {expenses
+                        .filter(expense => expense.description.toLowerCase().includes(searchTermFinanzas.toLowerCase()) || expense.providerName?.toLowerCase().includes(searchTermFinanzas.toLowerCase()))
+                        .map((expense: any) => (
                         <tr key={expense.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                           <td className="p-3 text-white">{expense.description}</td>
                           <td className="p-3 text-gray-400 text-sm">
@@ -1154,7 +1242,9 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {units.map((unit: any) => {
+                      {units
+                        .filter(unit => unit.unitNumber.toLowerCase().includes(searchTermFinanzas.toLowerCase()) || unit.owner?.email?.toLowerCase().includes(searchTermFinanzas.toLowerCase()))
+                        .map((unit: any) => {
                         const totalDeuda = (unit.invoices || [])
                           .filter((i: any) => i.status === 'PENDING' || i.status === 'PARTIAL')
                           .reduce((acc: number, curr: any) => acc + (curr.totalAmount - curr.amountPaid), 0);
@@ -1189,7 +1279,9 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {pendingPayments.map((payment: any) => (
+                      {pendingPayments
+                        .filter(payment => payment.unit?.unitNumber.toLowerCase().includes(searchTermFinanzas.toLowerCase()) || payment.referenceNumber?.toLowerCase().includes(searchTermFinanzas.toLowerCase()))
+                        .map((payment: any) => (
                         <tr key={payment.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                           <td className="p-3 text-gray-300">{new Date(payment.createdAt).toLocaleDateString()}</td>
                           <td className="p-3 font-bold text-white">{payment.unit?.unitNumber}</td>

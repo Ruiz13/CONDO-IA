@@ -22,12 +22,13 @@ const tenants_module_1 = require("./tenants/tenants.module");
 const email_module_1 = require("./email/email.module");
 const knowledge_module_1 = require("./knowledge/knowledge.module");
 const billing_module_1 = require("./billing/billing.module");
+const schedule_1 = require("@nestjs/schedule");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, email_module_1.EmailModule, knowledge_module_1.KnowledgeModule, chat_module_1.ChatModule, invoices_module_1.InvoicesModule, auth_module_1.AuthModule, payments_module_1.PaymentsModule, audit_module_1.AuditModule, communications_module_1.CommunicationsModule, expenses_module_1.ExpensesModule, tenants_module_1.TenantsModule, billing_module_1.BillingModule],
+        imports: [schedule_1.ScheduleModule.forRoot(), prisma_module_1.PrismaModule, email_module_1.EmailModule, knowledge_module_1.KnowledgeModule, chat_module_1.ChatModule, invoices_module_1.InvoicesModule, auth_module_1.AuthModule, payments_module_1.PaymentsModule, audit_module_1.AuditModule, communications_module_1.CommunicationsModule, expenses_module_1.ExpensesModule, tenants_module_1.TenantsModule, billing_module_1.BillingModule],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })

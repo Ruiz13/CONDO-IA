@@ -40,4 +40,12 @@ export declare class AuthController {
             avatarBase64: string | null;
         };
     }>;
+    adminResetPassword(body: {
+        adminId: string;
+        targetEmail: string;
+        newPassword?: string;
+    }): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

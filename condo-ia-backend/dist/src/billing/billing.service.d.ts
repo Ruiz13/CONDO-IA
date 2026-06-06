@@ -10,4 +10,5 @@ export declare class BillingService {
     generateMonthlyBilling(tenantId: string): Promise<{
         message: string;
     }>;
+    processAllTenantsMonthlyBilling(): Promise<void>;
 }

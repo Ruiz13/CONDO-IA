@@ -36,4 +36,8 @@ export declare class AuthService {
         success: boolean;
         message: string;
     }>;
+    adminResetPassword(adminId: string, targetEmail: string, newPasswordPlain: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

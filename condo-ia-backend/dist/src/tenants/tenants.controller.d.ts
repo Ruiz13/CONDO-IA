@@ -89,11 +89,23 @@ export declare class TenantsController {
             isCommercial: boolean;
         };
     }>;
+    deleteUnit(tenantId: string, unitId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
     getTenantStats(tenantId: string): Promise<{
         ingresosDelMes: number;
         gastosDelMes: number;
         pagosPorAprobar: number;
         totalResidentes: number;
+        morosidadData: {
+            name: string;
+            value: number;
+        }[];
+        consultasIA: {
+            date: any;
+            count: any;
+        }[];
     }>;
     getFinancialReport(tenantId: string): Promise<{
         payments: ({

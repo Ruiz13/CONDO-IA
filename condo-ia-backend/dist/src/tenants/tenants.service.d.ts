@@ -124,6 +124,14 @@ export declare class TenantsService {
         gastosDelMes: number;
         pagosPorAprobar: number;
         totalResidentes: number;
+        morosidadData: {
+            name: string;
+            value: number;
+        }[];
+        consultasIA: {
+            date: any;
+            count: any;
+        }[];
     }>;
     getFinancialReport(tenantId: string): Promise<{
         payments: ({
@@ -159,5 +167,9 @@ export declare class TenantsService {
             providerName: string | null;
             providerInvoice: string | null;
         }[];
+    }>;
+    deleteUnit(tenantId: string, unitId: string): Promise<{
+        success: boolean;
+        message: string;
     }>;
 }

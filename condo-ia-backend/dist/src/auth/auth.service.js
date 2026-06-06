@@ -136,6 +136,28 @@ let AuthService = AuthService_1 = class AuthService {
         });
         return { success: true, message: 'Avatar actualizado' };
     }
+    async adminResetPassword(adminId, targetEmail, newPasswordPlain) {
+        const admin = await this.prisma.user.findUnique({ where: { id: adminId } });
+        if (!admin || (admin.role !== 'ADMIN' && admin.role !== 'SUPER_ADMIN')) {
+            throw new common_1.UnauthorizedException('No tienes permisos para realizar esta acción');
+        }
+        const targetUser = await this.prisma.user.findUnique({ where: { email: targetEmail } });
+        if (!targetUser) {
+            throw new common_1.BadRequestException('El usuario especificado no existe');
+        }
+        if (admin.role === 'ADMIN' && targetUser.tenantId !== admin.tenantId) {
+            throw new common_1.UnauthorizedException('No tienes permisos para modificar a este usuario');
+        }
+        const passwordHash = await bcrypt.hash(newPasswordPlain, 10);
+        await this.prisma.user.update({
+            where: { id: targetUser.id },
+            data: {
+                passwordHash,
+                mustChangePassword: true
+            }
+        });
+        return { success: true, message: 'Clave restablecida correctamente' };
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = AuthService_1 = __decorate([

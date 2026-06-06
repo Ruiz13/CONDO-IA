@@ -13,9 +13,10 @@ import { TenantsModule } from './tenants/tenants.module';
 import { EmailModule } from './email/email.module';
 import { KnowledgeModule } from './knowledge/knowledge.module';
 import { BillingModule } from './billing/billing.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [PrismaModule, EmailModule, KnowledgeModule, ChatModule, InvoicesModule, AuthModule, PaymentsModule, AuditModule, CommunicationsModule, ExpensesModule, TenantsModule, BillingModule],
+  imports: [ScheduleModule.forRoot(), PrismaModule, EmailModule, KnowledgeModule, ChatModule, InvoicesModule, AuthModule, PaymentsModule, AuditModule, CommunicationsModule, ExpensesModule, TenantsModule, BillingModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -1,4 +1,5 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma.service';
 import { PdfService } from '../pdf/pdf.service';
 import { EmailService } from '../email/email.service';
@@ -98,6 +99,37 @@ export class BillingService {
     } catch (error) {
       this.logger.error('Error generando facturación', error);
       throw new HttpException(error.message || 'Error interno al generar facturación', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // Se ejecuta el día 1 de cada mes a las 00:00 AM
+  @Cron('0 0 1 * * *', {
+    name: 'monthly-billing',
+    timeZone: 'America/Caracas'
+  })
+  async processAllTenantsMonthlyBilling() {
+    this.logger.log('Iniciando proceso CRON de facturación mensual automática...');
+    try {
+      const activeTenants = await this.prisma.tenant.findMany({
+        where: { isActive: true }
+      });
+
+      for (const tenant of activeTenants) {
+        try {
+          this.logger.log(`Procesando facturación para el condominio: ${tenant.name} (${tenant.id})`);
+          await this.generateMonthlyBilling(tenant.id);
+        } catch (error) {
+          // Ignoramos el error 400 de "No hay gastos pendientes", no es un fallo crítico
+          if (error.getStatus && error.getStatus() === HttpStatus.BAD_REQUEST) {
+            this.logger.log(`Condominio ${tenant.name}: No hay gastos pendientes este mes.`);
+          } else {
+            this.logger.error(`Error procesando facturación para condominio ${tenant.name}`, error);
+          }
+        }
+      }
+      this.logger.log('Proceso CRON de facturación completado.');
+    } catch (error) {
+      this.logger.error('Fallo crítico en el proceso CRON de facturación general', error);
     }
   }
 }

@@ -6,15 +6,16 @@ export class ExpensesService {
   constructor(private prisma: PrismaService) {}
 
   async createExpense(tenantId: string, description: string, amount: number, appliesTo: string, providerName?: string, providerInvoice?: string, observation?: string) {
+    const finalDescription = observation ? `${description} | Observación: ${observation}` : description;
+    
     return this.prisma.expense.create({
       data: {
         tenantId,
-        description,
+        description: finalDescription,
         amount,
         appliesTo,
         providerName,
-        providerInvoice,
-        observation
+        providerInvoice
       }
     });
   }

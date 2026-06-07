@@ -77,7 +77,6 @@ model Expense {
   isBilled        Boolean  @default(false)
   providerName    String?
   providerInvoice String?
-  observation     String?
 
   tenant          Tenant   @relation(fields: [tenantId], references: [id])
 }

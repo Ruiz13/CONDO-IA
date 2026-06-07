@@ -36,11 +36,11 @@ export default function LoginScreen() {
           "Content-Type": "application/json",
           "Bypass-Tunnel-Reminder": "true",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
 
       if (!response.ok) {
-        // Mostrar el mensaje real del servidor (ej: "Condominio suspendido")
+        // Mostrar el mensaje real del servidor
         let errorMsg = "Credenciales inválidas";
         try {
           const errData = await response.json();
@@ -50,8 +50,14 @@ export default function LoginScreen() {
       }
 
       const data = await response.json();
-      login(data.access_token, data.user);
-      router.replace("/");
+      await login(data.access_token, data.user);
+
+      // Si debe cambiar contraseña, redirigir a esa pantalla
+      if (data.user.mustChangePassword) {
+        router.replace("/change-password");
+      } else {
+        router.replace("/");
+      }
     } catch (error: any) {
       Alert.alert(
         "Acceso Denegado",
@@ -66,10 +72,10 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.headerContainer}>
-          <Image 
-            source={require("../../assets/images/logo.png")} 
-            style={{ width: 250, height: 80, marginBottom: 16 }} 
-            resizeMode="contain" 
+          <Image
+            source={require("../../assets/images/logo.png")}
+            style={{ width: 250, height: 80, marginBottom: 16 }}
+            resizeMode="contain"
           />
           <Text style={styles.subtitle}>
             Inicia sesión para gestionar tu condominio
@@ -83,9 +89,15 @@ export default function LoginScreen() {
             placeholderTextColor="#64748b"
             keyboardType="email-address"
             autoCapitalize="none"
+            autoCorrect={false}
             value={email}
             onChangeText={setEmail}
           />
+          {/* Pista del formato de correo */}
+          <Text style={styles.emailHint}>
+            💡 Ej: apto1-1@residenciasimolatorreb.com
+          </Text>
+
           <View style={styles.passwordContainer}>
             <TextInput
               style={styles.passwordInput}
@@ -119,9 +131,14 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.forgotPassword}
-            onPress={() => Alert.alert('Recuperar contraseña', 'Por favor contacta al administrador de tu edificio para recuperar o restablecer tu contraseña.')}
+            onPress={() =>
+              Alert.alert(
+                "Recuperar contraseña",
+                "Por favor contacta al administrador de tu edificio para recuperar o restablecer tu contraseña.",
+              )
+            }
           >
             <Text style={styles.forgotPasswordText}>
               ¿Olvidaste tu contraseña?
@@ -137,13 +154,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0f172a" },
   content: { flex: 1, padding: 24, justifyContent: "center" },
   headerContainer: { alignItems: "center", marginBottom: 40 },
-  logo: { marginBottom: 16 },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#ffffff",
-    marginBottom: 8,
-  },
   subtitle: { fontSize: 16, color: "#94a3b8", textAlign: "center" },
   formContainer: { width: "100%" },
   input: {
@@ -152,9 +162,15 @@ const styles = StyleSheet.create({
     padding: 16,
     color: "#ffffff",
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 6,
     borderWidth: 1,
     borderColor: "#334155",
+  },
+  emailHint: {
+    color: "#3b82f6",
+    fontSize: 12,
+    marginBottom: 14,
+    marginLeft: 4,
   },
   passwordContainer: {
     flexDirection: "row",
@@ -171,9 +187,7 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 16,
   },
-  eyeIcon: {
-    padding: 16,
-  },
+  eyeIcon: { padding: 16 },
   button: {
     backgroundColor: "#3b82f6",
     borderRadius: 12,

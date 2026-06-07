@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// MVP: We use simple state. In a real app, use Expo SecureStore.
 type User = {
   id: string;
   email: string;
   role: string;
   tenantId: string;
+  tenantName?: string;
   mustChangePassword?: boolean;
   avatarBase64?: string;
 };
@@ -26,26 +27,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Al arrancar la app, recuperar sesión guardada
   useEffect(() => {
-    // Simulate loading local storage
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    const loadSession = async () => {
+      try {
+        const savedToken = await AsyncStorage.getItem('auth_token');
+        const savedUser = await AsyncStorage.getItem('auth_user');
+        if (savedToken && savedUser) {
+          setToken(savedToken);
+          setUser(JSON.parse(savedUser));
+        }
+      } catch (e) {
+        console.error('Error cargando sesión:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadSession();
   }, []);
 
-  const login = (newToken: string, newUser: User) => {
+  const login = async (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
+    // Guardar sesión en disco
+    try {
+      await AsyncStorage.setItem('auth_token', newToken);
+      await AsyncStorage.setItem('auth_user', JSON.stringify(newUser));
+    } catch (e) {
+      console.error('Error guardando sesión:', e);
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setToken(null);
     setUser(null);
+    try {
+      await AsyncStorage.removeItem('auth_token');
+      await AsyncStorage.removeItem('auth_user');
+    } catch (e) {
+      console.error('Error borrando sesión:', e);
+    }
   };
 
-  const updateUser = (updates: Partial<User>) => {
+  const updateUser = async (updates: Partial<User>) => {
     if (user) {
-      setUser({ ...user, ...updates });
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      try {
+        await AsyncStorage.setItem('auth_user', JSON.stringify(updatedUser));
+      } catch (e) {
+        console.error('Error actualizando sesión:', e);
+      }
     }
   };
 

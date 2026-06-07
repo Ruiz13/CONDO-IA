@@ -333,6 +333,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         alert(data.message || 'Facturación generada y recibos enviados con éxito');
         fetchExpenses();
+        fetchUnits();
       } else {
         alert(data.message || 'Error al generar facturas');
       }

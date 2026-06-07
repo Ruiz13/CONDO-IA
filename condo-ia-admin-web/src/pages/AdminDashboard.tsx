@@ -1228,6 +1228,7 @@ export default function AdminDashboard() {
                     <thead>
                       <tr className="border-b border-white/10 text-gray-400 print:text-black print:border-black print:bg-gray-100">
                         <th className="p-3 font-bold print:text-black">Descripción</th>
+                        <th className="p-3 font-bold print:text-black">Proveedor/Factura</th>
                         <th className="p-3 font-bold print:text-black">Aplica a</th>
                         <th className="p-3 font-bold text-right print:text-black">Monto</th>
                         <th className="p-3 font-medium text-center print:hidden">Acción</th>
@@ -1240,6 +1241,9 @@ export default function AdminDashboard() {
                         .map((expense: any) => (
                         <tr key={expense.id} className="border-b border-white/5 hover:bg-white/5 transition-colors print:border-black">
                           <td className="p-3 text-white print:text-black print:font-bold">{expense.description}</td>
+                          <td className="p-3 text-gray-400 text-sm print:text-black print:font-bold">
+                            {expense.providerName || '-'} {expense.providerInvoice ? `(Fac: ${expense.providerInvoice})` : ''}
+                          </td>
                           <td className="p-3 text-gray-400 text-sm print:text-black print:font-bold">
                             {expense.appliesTo === 'ALL' ? 'Todos' : 'Solo Apartamentos'}
                           </td>

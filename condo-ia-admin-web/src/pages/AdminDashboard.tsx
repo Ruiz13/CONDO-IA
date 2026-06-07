@@ -1210,7 +1210,7 @@ export default function AdminDashboard() {
                 </p>
                 <div className="mt-auto">
                   <div className="text-2xl font-bold text-white mb-2">
-                    Total Gastos Pendientes: ${expenses.filter((e: any) => !e.isBilled).reduce((acc: number, curr: any) => acc + (Number(curr.amount) || 0), 0).toFixed(2)}
+                    Total Gastos Pendientes: <span>${expenses.filter((e: any) => !e.isBilled).reduce((acc: number, curr: any) => acc + (Number(curr.amount) || 0), 0).toFixed(2)}</span>
                   </div>
                   <button 
                     onClick={handleGenerateInvoices}

@@ -798,7 +798,10 @@ export default function AdminDashboard() {
       <main className="flex-1 overflow-y-auto p-8 relative print:p-0">
         
         {/* Logo specifically for printing */}
-        <div className="hidden print:flex flex-col items-center justify-center mb-8 border-b border-gray-200 pb-6">
+        <div className="hidden print:flex flex-col items-center justify-center mb-8 border-b border-gray-200 pb-6 relative">
+          <div className="absolute top-0 right-0 text-sm text-gray-500 font-bold">
+            Fecha: {new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+          </div>
           <img src="/logo.png" alt="Condo IA Logo" className="w-48 h-auto mb-2" />
           <h2 className="text-black text-2xl font-bold">Comprobante de Gasto</h2>
           <p className="text-gray-500 text-sm">Condominio: {user?.tenantName}</p>
@@ -1159,6 +1162,25 @@ export default function AdminDashboard() {
                       placeholder="Ej. Esta factura tiene soporte..."
                     />
                   </div>
+                  {/* Signature lines specifically for printing */}
+                  <div className="hidden print:flex justify-between items-end mt-24 pt-8">
+                    <div className="text-center w-1/3 px-4">
+                      <div className="border-b-2 border-black mb-2"></div>
+                      <p className="text-black font-bold text-sm">Preparado por</p>
+                      <p className="text-gray-500 text-xs">Administración</p>
+                    </div>
+                    <div className="text-center w-1/3 px-4">
+                      <div className="border-b-2 border-black mb-2"></div>
+                      <p className="text-black font-bold text-sm">Aprobado por</p>
+                      <p className="text-gray-500 text-xs">Junta de Condominio</p>
+                    </div>
+                    <div className="text-center w-1/3 px-4">
+                      <div className="border-b-2 border-black mb-2"></div>
+                      <p className="text-black font-bold text-sm">Recibido por</p>
+                      <p className="text-gray-500 text-xs">Firma / Sello</p>
+                    </div>
+                  </div>
+
                   <div className="print:hidden">
                     <label className="block text-sm text-gray-400 mb-1">Aplica a</label>
                     <select

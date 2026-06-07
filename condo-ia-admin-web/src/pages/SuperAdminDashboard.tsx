@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Plus, LogOut, Loader2, Users, Trash2, KeyRound, MapPin, Phone, Lock, Unlock } from 'lucide-react';
+import { Building2, Plus, LogOut, Loader2, Users, Trash2, KeyRound, MapPin, Phone, Lock, Unlock, Eraser } from 'lucide-react';
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
@@ -177,6 +177,20 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const handleClearFinances = async (tenantId: string, tenantName: string) => {
+    if (!window.confirm(`⚠️ MODO PRUEBA ⚠️\n\n¿Estás seguro de que quieres limpiar TODAS las finanzas (pagos, facturas, gastos) de "${tenantName}"?`)) return;
+    try {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${tenantId}/clear-finances`, { method: 'POST' });
+      if (res.ok) {
+        alert('Finanzas limpiadas correctamente');
+      } else {
+        alert('Error al limpiar las finanzas');
+      }
+    } catch (error) {
+      alert('Error de conexión');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#050512] text-white">
       {/* Header */}
@@ -264,6 +278,13 @@ export default function SuperAdminDashboard() {
                       title={tenant.isActive ? "Suspender Condominio" : "Reactivar Condominio"}
                     >
                       {tenant.isActive ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                    </button>
+                    <button 
+                      onClick={() => handleClearFinances(tenant.id, tenant.name)}
+                      className="text-gray-500 hover:text-orange-400 hover:bg-orange-500/10 p-2 rounded-lg transition-colors"
+                      title="Limpiar Finanzas (Modo Prueba)"
+                    >
+                      <Eraser className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={() => handleDeleteTenant(tenant.id, tenant.name)}

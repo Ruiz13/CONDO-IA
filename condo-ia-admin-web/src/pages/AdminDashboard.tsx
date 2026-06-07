@@ -1194,7 +1194,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex gap-3 pt-4 print:hidden">
                     <button type="submit" disabled={creatingExpense} className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50">
-                      {creatingExpense ? 'Registrando...' : '1. Guardar Gasto'}
+                      {creatingExpense ? 'Registrando...' : '1. Registrar Gasto'}
                     </button>
                     <button type="button" onClick={() => window.print()} className="px-6 py-3 bg-white hover:bg-gray-200 text-black rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg">
                       <FileText className="w-5 h-5" /> 2. Imprimir Factura

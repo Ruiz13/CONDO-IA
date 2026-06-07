@@ -416,4 +416,19 @@ export class TenantsService {
       return { success: true, message: 'Finanzas limpiadas correctamente' };
     });
   }
+
+  async reactivateAllTenants() {
+    const result = await this.prisma.tenant.updateMany({
+      where: { isActive: false },
+      data: { isActive: true }
+    });
+    const tenants = await this.prisma.tenant.findMany({
+      select: { id: true, name: true, isActive: true }
+    });
+    return {
+      success: true,
+      reactivated: result.count,
+      tenants
+    };
+  }
 }

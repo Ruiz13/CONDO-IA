@@ -40,7 +40,13 @@ export default function LoginScreen() {
       });
 
       if (!response.ok) {
-        throw new Error("Credenciales inválidas");
+        // Mostrar el mensaje real del servidor (ej: "Condominio suspendido")
+        let errorMsg = "Credenciales inválidas";
+        try {
+          const errData = await response.json();
+          errorMsg = errData.message || errorMsg;
+        } catch (_) {}
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();

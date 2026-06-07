@@ -99,4 +99,9 @@ export class TenantsController {
   async clearFinances(@Param('tenantId') tenantId: string) {
     return this.tenantsService.clearFinances(tenantId);
   }
+
+  @Post('reactivate-all')
+  async reactivateAllTenants() {
+    return this.tenantsService.reactivateAllTenants();
+  }
 }

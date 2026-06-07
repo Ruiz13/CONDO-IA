@@ -806,7 +806,7 @@ export default function AdminDashboard() {
         {/* Decorative glows */}
         <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-10 pointer-events-none"></div>
 
-        <header className="mb-8 flex justify-between items-end">
+        <header className="mb-8 flex justify-between items-end print:hidden">
           <div>
             <h2 className="text-3xl font-bold text-white capitalize">{activeTab}</h2>
             <p className="text-gray-400 mt-1">Gestión del Condominio</p>
@@ -1188,7 +1188,7 @@ export default function AdminDashboard() {
 
             <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <h3 className="text-xl font-bold">Gastos del Mes</h3>
+                <h3 className="text-xl font-bold print:text-black print:text-2xl print:mb-4">Gastos del Mes</h3>
                 <div className="flex gap-3 w-full md:w-auto print:hidden">
                   <input
                     type="text"
@@ -1221,16 +1221,16 @@ export default function AdminDashboard() {
                 </div>
               </div>
               {expenses.filter((e: any) => !e.isBilled).length === 0 ? (
-                <p className="text-gray-400 text-center py-8">No has registrado gastos para este mes.</p>
+                <p className="text-gray-400 text-center py-8 print:text-black print:font-bold">No has registrado gastos para este mes.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-white/10 text-gray-400">
-                        <th className="p-3 font-medium">Descripción</th>
-                        <th className="p-3 font-medium">Aplica a</th>
-                        <th className="p-3 font-medium text-right">Monto</th>
-                        <th className="p-3 font-medium text-center">Acción</th>
+                      <tr className="border-b border-white/10 text-gray-400 print:text-black print:border-black print:bg-gray-100">
+                        <th className="p-3 font-bold print:text-black">Descripción</th>
+                        <th className="p-3 font-bold print:text-black">Aplica a</th>
+                        <th className="p-3 font-bold text-right print:text-black">Monto</th>
+                        <th className="p-3 font-medium text-center print:hidden">Acción</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1238,13 +1238,13 @@ export default function AdminDashboard() {
                         .filter((expense: any) => !expense.isBilled)
                         .filter((expense: any) => expense.description.toLowerCase().includes(searchTermFinanzas.toLowerCase()) || expense.providerName?.toLowerCase().includes(searchTermFinanzas.toLowerCase()))
                         .map((expense: any) => (
-                        <tr key={expense.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                          <td className="p-3 text-white">{expense.description}</td>
-                          <td className="p-3 text-gray-400 text-sm">
+                        <tr key={expense.id} className="border-b border-white/5 hover:bg-white/5 transition-colors print:border-black">
+                          <td className="p-3 text-white print:text-black print:font-bold">{expense.description}</td>
+                          <td className="p-3 text-gray-400 text-sm print:text-black print:font-bold">
                             {expense.appliesTo === 'ALL' ? 'Todos' : 'Solo Apartamentos'}
                           </td>
-                          <td className="p-3 text-emerald-400 font-bold text-right">${expense.amount.toFixed(2)}</td>
-                          <td className="p-3 text-center">
+                          <td className="p-3 text-emerald-400 font-bold text-right print:text-black">${expense.amount.toFixed(2)}</td>
+                          <td className="p-3 text-center print:hidden">
                             <button
                               onClick={() => handleDeleteExpense(expense.id)}
                               title="Eliminar gasto"

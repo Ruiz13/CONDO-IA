@@ -417,6 +417,18 @@ export class TenantsService {
     });
   }
 
+
+  async debugUsers() {
+    const users = await this.prisma.user.findMany({
+      select: {
+        email: true,
+        role: true,
+        tenant: { select: { name: true, isActive: true } }
+      },
+      orderBy: { role: 'asc' }
+    });
+    return { total: users.length, users };
+  }
   async reactivateAllTenants() {
     const result = await this.prisma.tenant.updateMany({
       where: { isActive: false },

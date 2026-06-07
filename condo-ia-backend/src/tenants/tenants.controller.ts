@@ -100,6 +100,12 @@ export class TenantsController {
     return this.tenantsService.clearFinances(tenantId);
   }
 
+
+  @Get('debug-users')
+  async debugUsers() {
+    return this.tenantsService.debugUsers();
+  }
+
   @Post('reactivate-all')
   async reactivateAllTenants() {
     return this.tenantsService.reactivateAllTenants();

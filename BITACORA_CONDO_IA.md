@@ -26,6 +26,11 @@ El ecosistema de Condo IA está compuesto por tres pilares fundamentales:
   * Conexión exitosa a Supabase mediante Transaction Pooler.
   * *Estado actual:* Configuración de red lista e infraestructura en la nube operativa.
 
+* **Módulo de Gestión de Gastos y Facturación Mensual:**
+  * **Paso 1 (Registrar):** Durante todo el mes, se debe ingresar en el "Registrador Gasto Mensual" cada factura o pago realizado por el edificio (ej. conserjería, electricidad, mantenimiento de ascensores).
+  * **Paso 2 (Respaldar/Auditar):** Al terminar el mes, usar los botones PDF o CSV en la tabla de "Gastos del Mes" para descargar la relación de gastos. Esto sirve como respaldo contable y garantiza la transparencia ante los vecinos.
+  * **Paso 3 (Emitir Recibos):** Finalmente, presionar el botón verde "Emitir Facturación Mensual". El sistema tomará el total de los gastos registrados y lo dividirá automáticamente según la alícuota (porcentaje) de cada apartamento y local, generando la deuda o recibo individual que el residente verá en su aplicación móvil.
+
 ---
 
 ## 📱 Esqueleto del Manual del Propietario (App Móvil)

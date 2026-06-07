@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma.service';
 export class ExpensesService {
   constructor(private prisma: PrismaService) {}
 
-  async createExpense(tenantId: string, description: string, amount: number, appliesTo: string, providerName?: string, providerInvoice?: string) {
+  async createExpense(tenantId: string, description: string, amount: number, appliesTo: string, providerName?: string, providerInvoice?: string, observation?: string) {
     return this.prisma.expense.create({
       data: {
         tenantId,
@@ -13,7 +13,8 @@ export class ExpensesService {
         amount,
         appliesTo,
         providerName,
-        providerInvoice
+        providerInvoice,
+        observation
       }
     });
   }

@@ -56,7 +56,7 @@ export default function AdminDashboard() {
 
   // Finanzas State
   const [expenses, setExpenses] = useState<any[]>([]);
-  const [newExpense, setNewExpense] = useState({ description: '', amount: '', appliesTo: 'ALL', providerName: '', providerInvoice: '' });
+  const [newExpense, setNewExpense] = useState({ description: '', amount: '', appliesTo: 'ALL', providerName: '', providerInvoice: '', observation: '' });
   const [creatingExpense, setCreatingExpense] = useState(false);
   const [generatingInvoices, setGeneratingInvoices] = useState(false);
   const [pendingPayments, setPendingPayments] = useState<any[]>([]);
@@ -305,11 +305,12 @@ export default function AdminDashboard() {
           amount: parseFloat(newExpense.amount),
           appliesTo: newExpense.appliesTo,
           providerName: newExpense.providerName || null,
-          providerInvoice: newExpense.providerInvoice || null
+          providerInvoice: newExpense.providerInvoice || null,
+          observation: newExpense.observation || null
         })
       });
       if (res.ok) {
-        setNewExpense({ description: '', amount: '', appliesTo: 'ALL', providerName: '', providerInvoice: '' });
+        setNewExpense({ description: '', amount: '', appliesTo: 'ALL', providerName: '', providerInvoice: '', observation: '' });
         fetchExpenses();
       } else {
         alert('Error al registrar gasto');
@@ -1147,6 +1148,15 @@ export default function AdminDashboard() {
                       onChange={(e) => setNewExpense({ ...newExpense, providerInvoice: e.target.value })}
                       className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none print:bg-transparent print:border-none print:text-black print:font-bold print:text-2xl print:p-0"
                       placeholder="Ej. FAC-00123"
+                    />
+                  </div>
+                  <div className="print:mb-6">
+                    <label className="block text-sm text-gray-400 mb-1 print:text-gray-600 print:text-sm">Observación (Opcional)</label>
+                    <textarea
+                      value={newExpense.observation}
+                      onChange={(e) => setNewExpense({ ...newExpense, observation: e.target.value })}
+                      className="w-full bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-indigo-500 outline-none print:bg-transparent print:border-none print:text-black print:font-bold print:text-lg print:p-0 resize-none h-24"
+                      placeholder="Ej. Esta factura tiene soporte..."
                     />
                   </div>
                   <div className="print:hidden">

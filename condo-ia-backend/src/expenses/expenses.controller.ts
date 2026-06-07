@@ -6,8 +6,8 @@ export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 
   @Post()
-  createExpense(@Body() body: { tenantId: string, description: string, amount: number, appliesTo: string, providerName?: string, providerInvoice?: string }) {
-    return this.expensesService.createExpense(body.tenantId, body.description, body.amount, body.appliesTo, body.providerName, body.providerInvoice);
+  createExpense(@Body() body: { tenantId: string, description: string, amount: number, appliesTo: string, providerName?: string, providerInvoice?: string, observation?: string }) {
+    return this.expensesService.createExpense(body.tenantId, body.description, body.amount, body.appliesTo, body.providerName, body.providerInvoice, body.observation);
   }
 
   @Get(':tenantId')

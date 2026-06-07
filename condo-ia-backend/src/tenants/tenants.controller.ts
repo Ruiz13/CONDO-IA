@@ -101,6 +101,12 @@ export class TenantsController {
   }
 
 
+
+  @Post('reset-all-resident-passwords')
+  async resetAllResidentPasswords() {
+    return this.tenantsService.resetAllResidentPasswords();
+  }
+
   @Get('debug-users')
   async debugUsers() {
     return this.tenantsService.debugUsers();

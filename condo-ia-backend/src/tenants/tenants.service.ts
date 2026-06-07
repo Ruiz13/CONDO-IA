@@ -418,6 +418,16 @@ export class TenantsService {
   }
 
 
+
+  async resetAllResidentPasswords() {
+    const bcrypt = require('bcrypt');
+    const hash = await bcrypt.hash('admin123', 10);
+    const result = await this.prisma.user.updateMany({
+      where: { role: 'RESIDENT' },
+      data: { passwordHash: hash, mustChangePassword: true }
+    });
+    return { success: true, updated: result.count, newPassword: 'admin123' };
+  }
   async debugUsers() {
     const users = await this.prisma.user.findMany({
       select: {

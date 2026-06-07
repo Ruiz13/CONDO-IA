@@ -694,7 +694,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#050512] flex text-white overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#0a0a16] border-r border-white/10 flex flex-col h-screen">
+      <aside className="w-64 bg-[#0a0a16] border-r border-white/10 flex flex-col h-screen print:hidden">
         <div className="p-6 flex flex-col items-center gap-3 border-b border-white/10">
           <img src="/logo.png" alt="Condo IA Logo" className="w-40 h-auto drop-shadow-lg" />
           <div className="text-center">
@@ -794,7 +794,15 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto p-8 relative">
+      <main className="flex-1 overflow-y-auto p-8 relative print:p-0">
+        
+        {/* Logo specifically for printing */}
+        <div className="hidden print:flex flex-col items-center justify-center mb-8 border-b border-gray-200 pb-6">
+          <img src="/logo.png" alt="Condo IA Logo" className="w-48 h-auto mb-2" />
+          <h2 className="text-black text-xl font-bold">Relación de Gastos Mensuales</h2>
+          <p className="text-gray-500 text-sm">Condominio: {user?.tenantName}</p>
+        </div>
+
         {/* Decorative glows */}
         <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-10 pointer-events-none"></div>
 
@@ -1095,7 +1103,7 @@ export default function AdminDashboard() {
 
         {activeTab === 'finanzas' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:hidden">
               <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
                 <h3 className="text-xl font-bold mb-4">Registrar Gasto Mensual</h3>
                 <form onSubmit={handleCreateExpense} className="space-y-4">
@@ -1181,7 +1189,7 @@ export default function AdminDashboard() {
             <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <h3 className="text-xl font-bold">Gastos del Mes</h3>
-                <div className="flex gap-3 w-full md:w-auto">
+                <div className="flex gap-3 w-full md:w-auto print:hidden">
                   <input
                     type="text"
                     placeholder="Buscar gastos, residentes o pagos..."
@@ -1253,7 +1261,7 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
+            <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 print:hidden">
               <h3 className="text-xl font-bold mb-4">Recibos Emitidos (Mes Actual)</h3>
               <p className="text-gray-400 text-sm mb-4">Aquí puedes ver los recibos que se han generado para los residentes.</p>
               {units.length === 0 ? (
@@ -1289,7 +1297,7 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
+            <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 print:hidden">
               <h3 className="text-xl font-bold mb-4">Pagos Pendientes por Aprobar</h3>
               {pendingPayments.length === 0 ? (
                 <p className="text-gray-400 text-center py-8">No hay pagos pendientes de aprobación.</p>

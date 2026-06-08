@@ -368,6 +368,14 @@ let TenantsService = class TenantsService {
             return { success: true, message: 'Residente eliminado correctamente' };
         });
     }
+    async clearFinances(tenantId) {
+        return await this.prisma.$transaction(async (tx) => {
+            await tx.payment.deleteMany({ where: { tenantId } });
+            await tx.invoice.deleteMany({ where: { tenantId } });
+            await tx.expense.deleteMany({ where: { tenantId } });
+            return { success: true, message: 'Finanzas limpiadas correctamente' };
+        });
+    }
 };
 exports.TenantsService = TenantsService;
 exports.TenantsService = TenantsService = __decorate([

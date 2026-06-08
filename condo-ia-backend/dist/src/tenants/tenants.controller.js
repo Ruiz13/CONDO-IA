@@ -59,6 +59,9 @@ let TenantsController = class TenantsController {
     async updateTenantSettings(tenantId, body) {
         return this.tenantsService.updateTenantSettings(tenantId, body);
     }
+    async clearFinances(tenantId) {
+        return this.tenantsService.clearFinances(tenantId);
+    }
 };
 exports.TenantsController = TenantsController;
 __decorate([
@@ -155,6 +158,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], TenantsController.prototype, "updateTenantSettings", null);
+__decorate([
+    (0, common_1.Post)(':tenantId/clear-finances'),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "clearFinances", null);
 exports.TenantsController = TenantsController = __decorate([
     (0, common_1.Controller)('api/tenants'),
     __metadata("design:paramtypes", [tenants_service_1.TenantsService])

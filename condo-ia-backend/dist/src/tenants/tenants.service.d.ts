@@ -166,9 +166,14 @@ export declare class TenantsService {
             isBilled: boolean;
             providerName: string | null;
             providerInvoice: string | null;
+            observation: string | null;
         }[];
     }>;
     deleteUnit(tenantId: string, unitId: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    clearFinances(tenantId: string): Promise<{
         success: boolean;
         message: string;
     }>;

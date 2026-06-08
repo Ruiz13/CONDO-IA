@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,6 +27,7 @@ export default function ReportPaymentScreen() {
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingOcr, setLoadingOcr] = useState(false);
+  const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null);
 
   useEffect(() => {
     fetchInvoices();
@@ -63,6 +65,7 @@ export default function ReportPaymentScreen() {
       });
       
       if (!result.canceled && result.assets && result.assets[0].base64) {
+        setSelectedImageBase64(result.assets[0].base64);
         processOcr(result.assets[0].base64);
       }
     } catch (e) {
@@ -122,17 +125,20 @@ export default function ReportPaymentScreen() {
           unitId,
           amount: parseFloat(amount),
           referenceNumber,
+          receiptBase64: selectedImageBase64,
         }),
       });
 
       if (response.ok) {
-        Alert.alert(
-          "¡Éxito!",
-          "Tu pago ha sido reportado y está en revisión."
-        );
+        const data = await response.json();
+        if (data.status === 'APPROVED') {
+          Alert.alert("¡Éxito!", "¡Pago conciliado y aprobado al instante!");
+        } else {
+          Alert.alert("¡Éxito!", "Tu pago ha sido reportado y está en revisión.");
+        }
         setTimeout(() => {
           router.back();
-        }, 500);
+        }, 1500);
       } else {
         throw new Error("Fallo al reportar");
       }
@@ -156,30 +162,41 @@ export default function ReportPaymentScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <TouchableOpacity
-          style={styles.ocrButton}
-          onPress={pickImage}
-          disabled={loadingOcr}
-        >
-          {loadingOcr ? (
-            <ActivityIndicator color="#10b981" />
-          ) : (
-            <>
-              <Ionicons
-                name="scan"
-                size={24}
-                color="#10b981"
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.ocrButtonText}>
-                Escanear Comprobante con IA
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+        {selectedImageBase64 ? (
+          <View style={{ alignItems: 'center', marginBottom: 8 }}>
+            <Image 
+              source={{ uri: `data:image/jpeg;base64,${selectedImageBase64}` }} 
+              style={{ width: 150, height: 150, borderRadius: 16, marginBottom: 8 }} 
+            />
+            <TouchableOpacity onPress={pickImage}>
+              <Text style={{ color: '#10b981', fontWeight: 'bold' }}>Cambiar Comprobante</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.ocrButton}
+            onPress={pickImage}
+            disabled={loadingOcr}
+          >
+            {loadingOcr ? (
+              <ActivityIndicator color="#10b981" />
+            ) : (
+              <>
+                <Ionicons
+                  name="scan"
+                  size={24}
+                  color="#10b981"
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.ocrButtonText}>
+                  Escanear Comprobante con IA
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
         <Text style={styles.ocrHelp}>
-          La IA extraerá el monto y la referencia automáticamente, y luego la
-          foto será desechada.
+          La IA extraerá el monto y la referencia automáticamente, y tu comprobante será enviado al administrador.
         </Text>
 
         <View style={styles.divider} />

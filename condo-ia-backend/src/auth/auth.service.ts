@@ -57,11 +57,12 @@ export class AuthService {
     };
   }
 
-  async changePassword(userId: string, newPasswordHash: string) {
+  async changePassword(userId: string, newPasswordPlain: string) {
+    const passwordHash = await bcrypt.hash(newPasswordPlain, 10);
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        passwordHash: newPasswordHash,
+        passwordHash,
         mustChangePassword: false,
       },
     });

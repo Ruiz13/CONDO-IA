@@ -105,6 +105,7 @@ model Payment {
   referenceNumber String?  
   status          String   // PENDING or APPROVED
   ocrConfidence   Float?
+  receiptUrl      String?
   createdAt       DateTime @default(now())
 
   tenant          Tenant   @relation(fields: [tenantId], references: [id])

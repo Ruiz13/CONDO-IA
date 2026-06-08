@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { EmailService } from '../email/email.service';
 
@@ -51,7 +53,7 @@ export class PaymentsService {
       if (remainingAmount <= 0) break;
 
       const debt = invoice.totalAmount - invoice.amountPaid;
-      
+
       if (remainingAmount >= debt) {
         // Pay it fully
         await this.prisma.invoice.update({
@@ -123,7 +125,7 @@ No incluyas markdown, comillas raras ni texto adicional.`;
         },
       ]);
       const responseText = result.response.text();
-      
+
       // Limpiar texto si Gemini pone comillas invertidas
       const cleanJsonStr = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
       return JSON.parse(cleanJsonStr);
@@ -133,7 +135,7 @@ No incluyas markdown, comillas raras ni texto adicional.`;
     }
   }
 
-  async reportPayment(data: { unitId: string, amount: number, referenceNumber: string, ocrConfidence?: number }) {
+  async reportPayment(data: { unitId: string, amount: number, referenceNumber: string, ocrConfidence?: number, receiptBase64?: string }) {
     const unit = await this.prisma.unit.findUnique({
       where: { id: data.unitId },
       select: { tenantId: true }
@@ -141,7 +143,7 @@ No incluyas markdown, comillas raras ni texto adicional.`;
 
     if (!unit) throw new Error('Unit not found');
 
-    return this.prisma.payment.create({
+    const payment = await this.prisma.payment.create({
       data: {
         unitId: data.unitId,
         amount: data.amount,
@@ -152,6 +154,52 @@ No incluyas markdown, comillas raras ni texto adicional.`;
         ocrConfidence: data.ocrConfidence
       }
     });
+
+    // Si viene la imagen en base64, guardarla en disco
+    if (data.receiptBase64) {
+      try {
+        const uploadDir = path.join(process.cwd(), 'uploads');
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        const fileName = `${payment.id}.jpg`;
+        const filePath = path.join(uploadDir, fileName);
+        
+        // Quitar posible prefijo "data:image/jpeg;base64," si viene
+        const base64Data = data.receiptBase64.replace(/^data:image\/\w+;base64,/, "");
+        
+        await fs.promises.writeFile(filePath, base64Data, 'base64');
+
+        // Actualizar la base de datos con la URL
+        await this.prisma.payment.update({
+          where: { id: payment.id },
+          data: { receiptUrl: `/uploads/${fileName}` }
+        });
+      } catch (err) {
+        this.logger.error('Error guardando imagen de pago', err);
+      }
+    }
+
+    // Auto-conciliación: Comprobar si el monto coincide exactamente con la deuda total o con alguna factura individual
+    const pendingInvoices = await this.prisma.invoice.findMany({
+      where: { unitId: data.unitId, status: { in: ['PENDING', 'PARTIAL'] } }
+    });
+    
+    const totalDebt = pendingInvoices.reduce((acc, inv) => acc + (inv.totalAmount - inv.amountPaid), 0);
+    
+    const matchesTotal = Math.abs(totalDebt - data.amount) < 0.01;
+    const matchesSingle = pendingInvoices.some(inv => Math.abs((inv.totalAmount - inv.amountPaid) - data.amount) < 0.01);
+
+    if (totalDebt > 0 && (matchesTotal || matchesSingle)) {
+      // Aprobar automáticamente
+      const approvedPayment = await this.approvePayment(payment.id);
+      if (approvedPayment) {
+        return approvedPayment;
+      }
+    }
+
+    return payment;
   }
 
   async getUserPayments(userId: string) {

@@ -21,7 +21,7 @@ let ExpensesController = class ExpensesController {
         this.expensesService = expensesService;
     }
     createExpense(body) {
-        return this.expensesService.createExpense(body.tenantId, body.description, body.amount, body.appliesTo, body.providerName, body.providerInvoice);
+        return this.expensesService.createExpense(body.tenantId, body.description, body.amount, body.appliesTo, body.providerName, body.providerInvoice, body.observation);
     }
     getExpenses(tenantId) {
         return this.expensesService.getExpenses(tenantId);

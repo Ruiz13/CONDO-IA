@@ -140,6 +140,7 @@ export declare class TenantsController {
             isBilled: boolean;
             providerName: string | null;
             providerInvoice: string | null;
+            observation: string | null;
         }[];
     }>;
     deleteTenant(tenantId: string): Promise<{
@@ -177,6 +178,10 @@ export declare class TenantsController {
         state?: string;
         country?: string;
     }): Promise<{
+        message: string;
+    }>;
+    clearFinances(tenantId: string): Promise<{
+        success: boolean;
         message: string;
     }>;
 }

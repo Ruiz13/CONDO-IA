@@ -3,7 +3,7 @@ import { PaymentsService } from './payments.service';
 
 @Controller('api/payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) { }
 
   @Get('pending')
   getPendingPayments() {
@@ -21,7 +21,7 @@ export class PaymentsController {
   }
 
   @Post('report')
-  reportPayment(@Body() body: { unitId: string, amount: number, referenceNumber: string }) {
+  reportPayment(@Body() body: { unitId: string, amount: number, referenceNumber: string, receiptBase64?: string }) {
     return this.paymentsService.reportPayment(body);
   }
 

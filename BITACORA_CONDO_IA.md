@@ -18,18 +18,20 @@ El ecosistema de Condo IA está compuesto por tres pilares fundamentales:
 > Este manual está dirigido a la junta de condominio o la empresa administradora. Se enfoca en la gestión, revisión y control operativo.
 
 ### Módulos Desarrollados hasta ahora:
-* **Dashboard Principal:** 
-  * Interfaz de monitoreo de métricas.
-  * *Estado actual:* Interfaz visual terminada con diseño moderno y soporte para tema oscuro. A la espera de conexión con datos reales.
+* **Dashboard Principal (Resumen Financiero y Operativo):** 
+  * Interfaz de monitoreo de métricas clave (Ingresos, Gastos, Pagos por Aprobar, Total Residentes).
+  * **Exportación de Gráficos:** Botones de descarga (PDF/Imagen) integrados en los gráficos de "Comparativa de Ingresos vs Gastos" y "Estado de Morosidad". Esta función permite a la administración obtener capturas limpias de las estadísticas para incluirlas en los reportes o asambleas para los propietarios.
+  * *Estado actual:* Interfaz conectada a datos y gráficos interactivos operativos.
 * **Base de Datos (Backend):**
   * Esquema inicial de Prisma configurado.
   * Conexión exitosa a Supabase mediante Transaction Pooler.
   * *Estado actual:* Configuración de red lista e infraestructura en la nube operativa.
 
-* **Módulo de Gestión de Gastos y Facturación Mensual:**
-  * **Paso 1 (Registrar):** Durante todo el mes, se debe ingresar en el "Registrador Gasto Mensual" cada factura o pago realizado por el edificio (ej. conserjería, electricidad, mantenimiento de ascensores).
-  * **Paso 2 (Respaldar/Auditar):** Al terminar el mes, usar los botones PDF o CSV en la tabla de "Gastos del Mes" para descargar la relación de gastos. Esto sirve como respaldo contable y garantiza la transparencia ante los vecinos.
-  * **Paso 3 (Emitir Recibos):** Finalmente, presionar el botón verde "Emitir Facturación Mensual". El sistema tomará el total de los gastos registrados y lo dividirá automáticamente según la alícuota (porcentaje) de cada apartamento y local, generando la deuda o recibo individual que el residente verá en su aplicación móvil.
+* **Módulo de Gestión de Gastos:**
+  * **Paso 1 (Llenar Datos):** El administrador ingresa en el formulario "Registrador Gasto Mensual" los detalles de la factura: Descripción, Monto, Proveedor, N° de Factura y cualquier Observación extensa (ej. notas sobre soportes o garantías).
+  * **Paso 2 (Guardar):** Oprime el botón "1. Guardar Gasto" para registrarlo en el sistema.
+  * **Paso 3 (Imprimir Comprobante):** Inmediatamente después, oprime el botón "2. Imprimir Factura". Esto genera un Comprobante de Gasto en PDF, limpio, sin elementos de la interfaz, con fecha automática y 3 líneas de firmas (Preparado por, Aprobado por, Recibido por). Este documento se imprime para engraparlo con la factura física y tener un expediente de auditoría perfecto.
+  * **Paso 4 (Emitir Recibos a Residentes):** A fin de mes, presionar el botón verde "Emitir Facturación Mensual". El sistema toma todos los gastos del mes y los divide según la alícuota de cada apartamento, generando la deuda que cada residente verá en su App Móvil.
 
 ---
 
@@ -44,10 +46,11 @@ El ecosistema de Condo IA está compuesto por tres pilares fundamentales:
   * Cuadrícula de acciones rápidas (Chat IA, Reportar Pago, Historial, Votos).
   * Barra de navegación inferior.
   * *Estado actual:* UI premium completamente funcional en emulador web.
-* **Módulo: Reportar Pago:**
-  * Formulario para ingresar el Monto del pago y el Número de Referencia.
-  * **Ligereza y Velocidad:** Se decidió enviar únicamente los datos textuales a la base de datos, eliminando el peso de imágenes y escaneos OCR en esta pantalla para mayor agilidad.
-  * *Estado actual:* Interfaz conectada exitosamente a la base de datos (Supabase) mediante el backend en NestJS. Pagos entran con estado "PENDING".
+* **Módulo: Reportar Pago (Completado):**
+  * Formulario para ingresar el Monto del pago y el Número de Referencia, ahora con funcionalidad avanzada.
+  * **Flujo de Comprobantes (Buckets):** La aplicación permite al residente subir una foto de su recibo o transferencia. Esta imagen se guarda en el servidor de forma local (`uploads/`) y se almacena solo su enlace en la base de datos para mantener el sistema ligero y rápido.
+  * **Lectura Inteligente con IA (OCR):** Al tomar o subir la foto, la IA (Gemini) la lee automáticamente y extrae el monto y el número de referencia para rellenar los campos sin que el usuario tenga que tipear.
+  * **Conciliación Automática:** Al enviar el pago, el sistema verifica internamente si el monto ingresado coincide *exactamente* con la deuda que posee el residente en ese momento. Si es igual, el pago cambia a estado "Aprobado" automáticamente en tiempo real. De lo contrario, queda "Pendiente" para revisión del operador.
 
 ---
 

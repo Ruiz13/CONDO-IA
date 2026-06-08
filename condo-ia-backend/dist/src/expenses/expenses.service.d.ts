@@ -2,7 +2,7 @@ import { PrismaService } from '../prisma.service';
 export declare class ExpensesService {
     private prisma;
     constructor(prisma: PrismaService);
-    createExpense(tenantId: string, description: string, amount: number, appliesTo: string, providerName?: string, providerInvoice?: string): Promise<{
+    createExpense(tenantId: string, description: string, amount: number, appliesTo: string, providerName?: string, providerInvoice?: string, observation?: string): Promise<{
         id: string;
         tenantId: string;
         amount: number;
@@ -14,6 +14,7 @@ export declare class ExpensesService {
         isBilled: boolean;
         providerName: string | null;
         providerInvoice: string | null;
+        observation: string | null;
     }>;
     getExpenses(tenantId: string): Promise<{
         id: string;
@@ -27,6 +28,7 @@ export declare class ExpensesService {
         isBilled: boolean;
         providerName: string | null;
         providerInvoice: string | null;
+        observation: string | null;
     }[]>;
     deleteExpense(id: string): Promise<{
         id: string;
@@ -40,5 +42,6 @@ export declare class ExpensesService {
         isBilled: boolean;
         providerName: string | null;
         providerInvoice: string | null;
+        observation: string | null;
     }>;
 }

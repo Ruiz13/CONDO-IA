@@ -17,7 +17,7 @@ let ExpensesService = class ExpensesService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async createExpense(tenantId, description, amount, appliesTo, providerName, providerInvoice) {
+    async createExpense(tenantId, description, amount, appliesTo, providerName, providerInvoice, observation) {
         return this.prisma.expense.create({
             data: {
                 tenantId,
@@ -25,7 +25,8 @@ let ExpensesService = class ExpensesService {
                 amount,
                 appliesTo,
                 providerName,
-                providerInvoice
+                providerInvoice,
+                observation
             }
         });
     }

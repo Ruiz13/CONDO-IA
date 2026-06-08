@@ -21,6 +21,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<{ingresosDelMes: number, gastosDelMes: number, pagosPorAprobar: number, totalResidentes: number, morosidadData: any[], consultasIA: any[]}>({ ingresosDelMes: 0, gastosDelMes: 0, pagosPorAprobar: 0, totalResidentes: 0, morosidadData: [], consultasIA: [] });
   const [financialData, setFinancialData] = useState<any[]>([]);
   const chartRef = useRef<HTMLDivElement>(null);
+  const morosidadRef = useRef<HTMLDivElement>(null);
   const [polls, setPolls] = useState<any[]>([]);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState('');
@@ -285,6 +286,23 @@ export default function AdminDashboard() {
         link.href = image;
         link.click();
         toast.success('Gráfico descargado exitosamente');
+      } catch (error) {
+        console.error('Error descargando imagen:', error);
+        toast.error('Hubo un error al generar la imagen');
+      }
+    }
+  };
+
+  const downloadMorosidadImage = async () => {
+    if (morosidadRef.current) {
+      try {
+        const canvas = await html2canvas(morosidadRef.current, { backgroundColor: '#0a0a16' });
+        const image = canvas.toDataURL('image/png', 1.0);
+        const link = document.createElement('a');
+        link.download = `Morosidad_${user.tenantName}.png`;
+        link.href = image;
+        link.click();
+        toast.success('Gráfico de morosidad exportado');
       } catch (error) {
         console.error('Error descargando imagen:', error);
         toast.error('Hubo un error al generar la imagen');
@@ -942,8 +960,16 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
               {/* Gráfico de Morosidad */}
               <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
-                <h3 className="text-xl font-bold mb-6">Estado de Morosidad (Mes Actual)</h3>
-                <div className="h-64 w-full">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold">Estado de Morosidad (Mes Actual)</h3>
+                  <button 
+                    onClick={downloadMorosidadImage}
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium shadow-lg transition-all text-sm whitespace-nowrap"
+                  >
+                    <FileText className="w-4 h-4" /> PDF
+                  </button>
+                </div>
+                <div className="h-64 w-full" ref={morosidadRef}>
                   {stats.morosidadData && stats.morosidadData.length > 0 && stats.morosidadData.reduce((acc: number, curr: any) => acc + curr.value, 0) > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -1053,21 +1079,6 @@ export default function AdminDashboard() {
                     onChange={(e) => setSearchTermResidentes(e.target.value)}
                     className="flex-1 bg-[#050512] border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-indigo-500"
                   />
-                  <button 
-                    onClick={() => {
-                      const ws = XLSX.utils.json_to_sheet(
-                        units
-                          .filter(u => u.unitNumber.toLowerCase().includes(searchTermResidentes.toLowerCase()) || u.owner?.email?.toLowerCase().includes(searchTermResidentes.toLowerCase()))
-                          .map(u => ({ Apartamento: u.unitNumber, Correo: u.owner?.email || 'N/A', Alicuota: `${u.aliquotPercentage}%` }))
-                      );
-                      const wb = XLSX.utils.book_new();
-                      XLSX.utils.book_append_sheet(wb, ws, 'Residentes');
-                      XLSX.writeFile(wb, 'Lista_Residentes.csv');
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 rounded-xl font-medium shadow-lg transition-all text-sm whitespace-nowrap"
-                  >
-                    <Download className="w-4 h-4" /> CSV
-                  </button>
                   <button 
                     onClick={() => window.print()}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium shadow-lg transition-all text-sm whitespace-nowrap"
@@ -1239,7 +1250,7 @@ export default function AdminDashboard() {
                     onClick={() => {
                       const ws = XLSX.utils.json_to_sheet(
                         expenses
-                          .filter(e => e.description.toLowerCase().includes(searchTermFinanzas.toLowerCase()) || e.providerName?.toLowerCase().includes(searchTermFinanzas.toLowerCase()))
+                          .filter((e: any) => e.description.toLowerCase().includes(searchTermFinanzas.toLowerCase()) || e.providerName?.toLowerCase().includes(searchTermFinanzas.toLowerCase()))
                           .map((e: any) => ({ Descripcion: e.description, Aplica: e.appliesTo === 'ALL' ? 'Todos' : 'Solo Apartamentos', Monto: e.amount }))
                       );
                       const wb = XLSX.utils.book_new();

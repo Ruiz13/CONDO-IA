@@ -277,36 +277,40 @@ export default function AdminDashboard() {
   };
 
   const downloadChartImage = async () => {
+    let downloaded = false;
+    
     if (chartRef.current) {
       try {
         const canvas = await html2canvas(chartRef.current, { backgroundColor: '#0a0a16' });
         const image = canvas.toDataURL('image/png', 1.0);
         const link = document.createElement('a');
-        link.download = `Grafico_Condominio_${user.tenantName}.png`;
+        link.download = `Grafico_Comparativa_${user.tenantName}.png`;
         link.href = image;
         link.click();
-        toast.success('Gráfico descargado exitosamente');
+        downloaded = true;
       } catch (error) {
-        console.error('Error descargando imagen:', error);
-        toast.error('Hubo un error al generar la imagen');
+        console.error('Error descargando imagen comparativa:', error);
       }
     }
-  };
 
-  const downloadMorosidadImage = async () => {
     if (morosidadRef.current) {
       try {
         const canvas = await html2canvas(morosidadRef.current, { backgroundColor: '#0a0a16' });
         const image = canvas.toDataURL('image/png', 1.0);
         const link = document.createElement('a');
-        link.download = `Morosidad_${user.tenantName}.png`;
+        link.download = `Grafico_Morosidad_${user.tenantName}.png`;
         link.href = image;
         link.click();
-        toast.success('Gráfico de morosidad exportado');
+        downloaded = true;
       } catch (error) {
-        console.error('Error descargando imagen:', error);
-        toast.error('Hubo un error al generar la imagen');
+        console.error('Error descargando imagen morosidad:', error);
       }
+    }
+
+    if (downloaded) {
+      toast.success('Gráficos descargados exitosamente');
+    } else {
+      toast.error('No se pudo generar las imágenes');
     }
   };
 
@@ -960,15 +964,7 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
               {/* Gráfico de Morosidad */}
               <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold">Estado de Morosidad (Mes Actual)</h3>
-                  <button 
-                    onClick={downloadMorosidadImage}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-medium shadow-lg transition-all text-sm whitespace-nowrap"
-                  >
-                    <FileText className="w-4 h-4" /> PDF
-                  </button>
-                </div>
+                <h3 className="text-xl font-bold mb-6">Estado de Morosidad (Mes Actual)</h3>
                 <div className="h-64 w-full" ref={morosidadRef}>
                   {stats.morosidadData && stats.morosidadData.length > 0 && stats.morosidadData.reduce((acc: number, curr: any) => acc + curr.value, 0) > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">

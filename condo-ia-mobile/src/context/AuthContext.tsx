@@ -22,6 +22,9 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// Referencia global para poder cerrar sesión desde archivos de peticiones (API)
+export let globalLogout: () => void = () => {};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -46,6 +49,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadSession();
   }, []);
 
+  const logout = async () => {
+    setToken(null);
+    setUser(null);
+    try {
+      await AsyncStorage.removeItem('auth_token');
+      await AsyncStorage.removeItem('auth_user');
+    } catch (e) {
+      console.error('Error borrando sesión:', e);
+    }
+  };
+
+  // Asignamos la función local a la referencia global
+  useEffect(() => {
+    globalLogout = logout;
+  }, []);
+
   const login = async (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
@@ -55,17 +74,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await AsyncStorage.setItem('auth_user', JSON.stringify(newUser));
     } catch (e) {
       console.error('Error guardando sesión:', e);
-    }
-  };
-
-  const logout = async () => {
-    setToken(null);
-    setUser(null);
-    try {
-      await AsyncStorage.removeItem('auth_token');
-      await AsyncStorage.removeItem('auth_user');
-    } catch (e) {
-      console.error('Error borrando sesión:', e);
     }
   };
 
@@ -92,6 +100,9 @@ export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
   }
   return context;
 };

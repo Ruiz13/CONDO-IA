@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 const PIE_COLORS = ['#34d399', '#f472b6']; // Emerald para Solventes, Pink para Morosos
-import html2canvas from 'html2canvas';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -279,7 +278,7 @@ export default function AdminDashboard() {
   const downloadChartImage = async () => {
     let downloaded = false;
     
-    const downloadSvgAsPng = (ref: React.RefObject<HTMLDivElement>, filename: string) => {
+    const downloadSvgAsPng = (ref: React.RefObject<HTMLDivElement | null>, filename: string) => {
       return new Promise<void>((resolve, reject) => {
         try {
           if (!ref.current) return reject("Ref no existe");

@@ -32,6 +32,7 @@ model Tenant {
   polls        Poll[]
   messages     Message[]
   knowledgeDocuments KnowledgeDocument[]
+  reservations Reservation[]
 }
 
 model User {
@@ -63,6 +64,7 @@ model Unit {
   owner            User     @relation(fields: [ownerId], references: [id])
   invoices         Invoice[]
   payments         Payment[]
+  reservations     Reservation[]
 }
 
 model Expense {
@@ -194,4 +196,17 @@ model KnowledgeDocument {
   createdAt DateTime @default(now())
 
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model Reservation {
+  id        String   @id @default(uuid())
+  tenantId  String
+  unitId    String
+  area      String   // POOL, GYM, PARTY_ROOM
+  date      DateTime
+  status    String   // PENDING, APPROVED, REJECTED
+  createdAt DateTime @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  unit      Unit     @relation(fields: [unitId], references: [id])
 }

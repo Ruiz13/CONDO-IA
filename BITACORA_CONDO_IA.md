@@ -54,8 +54,10 @@ El ecosistema de Condo IA está compuesto por tres pilares fundamentales:
 
 ---
 
-## 📝 Próximos Pasos (Pendientes)
+## 📝 Próximos Pasos (Pendientes) y Tareas Recientes
 *(Esta sección se irá actualizando conforme el usuario decida el rumbo del proyecto)*
 - [x] Conectar la base de datos Supabase con la App Móvil para el envío real de reportes de pago.
-- [x] Implementar la pantalla del "Chat IA" en la App Móvil (Conectada a Gemini).
+- [x] Implementar la pantalla del "Chat IA" en la App Móvil con estilo premium (Burbujas tipo WhatsApp, input multilínea, auto-scroll y conexión real al backend y base de datos).
 - [x] Programar la lógica del Panel Administrativo para recibir, aprobar o rechazar los comprobantes enviados por los residentes (Implementado en Backend).
+- [x] Corrección de Despliegue en la Nube (Vercel): Se configuró exitosamente el `Root Directory` y los comandos de construcción (`npm run build`) para la carpeta `condo-ia-admin-web`, permitiendo despliegue continuo automático.
+- [x] Ajustes de Gráficos en Panel de Admin: Eliminación del botón "Descargar PDF" en la gráfica de morosidad a petición, y ajuste de "Descargar Imagen" para que baje dos versiones (Modo Claro y Modo Oscuro).

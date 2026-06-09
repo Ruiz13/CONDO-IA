@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Vote, LayoutDashboard, Settings, FileText, Loader2, Megaphone, Bot, Trash2, TrendingUp, TrendingDown, Clock, Download } from 'lucide-react';
+import { LogOut, Users, Vote, LayoutDashboard, Settings, FileText, Loader2, Megaphone, Bot, Trash2, TrendingUp, TrendingDown, Clock, Download, CalendarDays, Check, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -62,6 +62,10 @@ export default function AdminDashboard() {
   const [pendingPayments, setPendingPayments] = useState<any[]>([]);
   const [approvingPayment, setApprovingPayment] = useState<string | null>(null);
 
+  // Reservas
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [loadingReservations, setLoadingReservations] = useState(false);
+
   // Filtros de Búsqueda
   const [searchTermResidentes, setSearchTermResidentes] = useState('');
   const [searchTermFinanzas, setSearchTermFinanzas] = useState('');
@@ -98,9 +102,40 @@ export default function AdminDashboard() {
         fetchFinancialDataForCharts();
         fetchUnits();
       }
+      if (activeTab === 'reservas') fetchReservations();
       if (activeTab === 'perfil') fetchTenantConfig();
     }
-  }, [user, activeTab]);
+  }, [user, activeTab, selectedYear, selectedMonth]);
+
+  const fetchReservations = async () => {
+    setLoadingReservations(true);
+    try {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/reservations`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
+      if (res.ok) setReservations(await res.json());
+    } catch (e) { console.error(e); }
+    setLoadingReservations(false);
+  };
+
+  const handleUpdateReservationStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/reservations/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        toast.success(`Reserva ${status === 'APPROVED' ? 'Aprobada' : 'Rechazada'} exitosamente`);
+        fetchReservations();
+      } else {
+        toast.error('Error al actualizar estado');
+      }
+    } catch (e) { toast.error('Error de conexión'); }
+  };
 
   const fetchTenantConfig = async () => {
     try {
@@ -783,6 +818,16 @@ export default function AdminDashboard() {
           >
             <FileText className="w-5 h-5" />
             <span className="font-medium">Finanzas</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reservas')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              activeTab === 'reservas' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <CalendarDays className="w-5 h-5" />
+            <span className="font-medium">Reservas</span>
           </button>
 
           <button
@@ -1564,6 +1609,72 @@ export default function AdminDashboard() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reservas' && (
+          <div className="space-y-6">
+            <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6">
+              <h3 className="text-xl font-bold mb-4">Gestión de Reservas (Áreas Comunes)</h3>
+              <p className="text-sm text-gray-400 mb-6">Administra las solicitudes de reservación de áreas comunes realizadas por los residentes que están solventes.</p>
+              
+              {loadingReservations ? (
+                <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 text-indigo-500 animate-spin" /></div>
+              ) : reservations.length === 0 ? (
+                <p className="text-gray-400 text-center py-8">No hay reservas registradas.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-white/10 text-gray-400 text-sm">
+                        <th className="pb-3 px-4">Fecha Solicitada</th>
+                        <th className="pb-3 px-4">Área</th>
+                        <th className="pb-3 px-4">Residente</th>
+                        <th className="pb-3 px-4">Estado</th>
+                        <th className="pb-3 px-4 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reservations.map((res: any) => (
+                        <tr key={res.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <td className="py-4 px-4 font-medium">{new Date(res.date).toLocaleDateString()}</td>
+                          <td className="py-4 px-4 text-gray-300">
+                            {res.area === 'POOL' ? 'Piscina' : res.area === 'GYM' ? 'Gimnasio' : 'Salón de Fiestas'}
+                          </td>
+                          <td className="py-4 px-4 text-gray-300">
+                            <div className="text-sm">Apto {res.unit?.unitNumber}</div>
+                            <div className="text-xs text-gray-500">{res.unit?.owner?.email}</div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`px-2 py-1 text-xs font-bold rounded-lg ${
+                              res.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
+                              res.status === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
+                              'bg-amber-500/20 text-amber-400'
+                            }`}>
+                              {res.status === 'APPROVED' ? 'Aprobada' : res.status === 'REJECTED' ? 'Rechazada' : 'Pendiente'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex justify-end gap-2">
+                              {res.status === 'PENDING' && (
+                                <>
+                                  <button onClick={() => handleUpdateReservationStatus(res.id, 'APPROVED')} className="p-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white rounded-lg transition-colors" title="Aprobar">
+                                    <Check className="w-4 h-4" />
+                                  </button>
+                                  <button onClick={() => handleUpdateReservationStatus(res.id, 'REJECTED')} className="p-2 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-colors" title="Rechazar">
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

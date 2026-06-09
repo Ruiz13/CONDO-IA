@@ -132,6 +132,18 @@ export default function HomeScreen() {
           </Link>
         </View>
 
+        {/* Reservas */}
+        <View style={styles.gridItem}>
+          <Link href="/reservations" asChild>
+            <TouchableOpacity style={{alignItems: 'center', width: '100%'}}>
+              <LinearGradient colors={['#a855f7', '#7e22ce']} style={styles.iconContainer}>
+                <Ionicons name="calendar" size={32} color="white" />
+              </LinearGradient>
+              <Text style={styles.gridText}>Reservas</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+
         {/* Votos */}
         <View style={styles.gridItem}>
           <Link href="/voting" asChild>

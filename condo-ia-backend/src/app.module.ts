@@ -15,9 +15,10 @@ import { KnowledgeModule } from './knowledge/knowledge.module';
 import { BillingModule } from './billing/billing.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ReservationsModule } from './reservations/reservations.module';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), PrismaModule, EmailModule, KnowledgeModule, ChatModule, InvoicesModule, AuthModule, PaymentsModule, AuditModule, CommunicationsModule, ExpensesModule, TenantsModule, BillingModule, ReservationsModule],
+  imports: [ScheduleModule.forRoot(), PrismaModule, EmailModule, KnowledgeModule, ChatModule, InvoicesModule, AuthModule, PaymentsModule, AuditModule, CommunicationsModule, ExpensesModule, TenantsModule, BillingModule, ReservationsModule, WhatsappModule],
   controllers: [AppController],
   providers: [AppService],
 })

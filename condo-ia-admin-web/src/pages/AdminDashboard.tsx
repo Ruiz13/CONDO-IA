@@ -279,38 +279,66 @@ export default function AdminDashboard() {
   const downloadChartImage = async () => {
     let downloaded = false;
     
-    if (chartRef.current) {
-      try {
-        const canvas = await html2canvas(chartRef.current, { backgroundColor: '#0a0a16' });
-        const image = canvas.toDataURL('image/png', 1.0);
-        const link = document.createElement('a');
-        link.download = `Grafico_Comparativa_${user.tenantName}.png`;
-        link.href = image;
-        link.click();
-        downloaded = true;
-      } catch (error) {
-        console.error('Error descargando imagen comparativa:', error);
-      }
-    }
+    const downloadSvgAsPng = (ref: React.RefObject<HTMLDivElement>, filename: string) => {
+      return new Promise<void>((resolve, reject) => {
+        try {
+          if (!ref.current) return reject("Ref no existe");
+          const svg = ref.current.querySelector('svg');
+          if (!svg) return reject("No se encontró el SVG del gráfico");
+          
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const data = (new XMLSerializer()).serializeToString(svg);
+          const DOMURL = window.URL || window.webkitURL || window;
+          const img = new Image();
+          const svgBlob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
+          const url = DOMURL.createObjectURL(svgBlob);
+          
+          img.onload = () => {
+            // Darle un fondo oscuro
+            canvas.width = img.width + 40;
+            canvas.height = img.height + 40;
+            if (ctx) {
+              ctx.fillStyle = '#0a0a16';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 20, 20);
+            }
+            DOMURL.revokeObjectURL(url);
+            
+            const imgURI = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = imgURI;
+            link.click();
+            resolve();
+          };
+          img.onerror = (e) => reject("Error al cargar SVG en la imagen: " + e);
+          img.src = url;
+        } catch (err) {
+          reject(err);
+        }
+      });
+    };
 
-    if (morosidadRef.current) {
-      try {
-        const canvas = await html2canvas(morosidadRef.current, { backgroundColor: '#0a0a16' });
-        const image = canvas.toDataURL('image/png', 1.0);
-        const link = document.createElement('a');
-        link.download = `Grafico_Morosidad_${user.tenantName}.png`;
-        link.href = image;
-        link.click();
+    try {
+      if (chartRef.current && financialData.length > 0) {
+        await downloadSvgAsPng(chartRef, `Grafico_Comparativa_${user.tenantName}.png`);
         downloaded = true;
-      } catch (error) {
-        console.error('Error descargando imagen morosidad:', error);
       }
-    }
+      
+      if (morosidadRef.current && stats.morosidadData && stats.morosidadData.length > 0) {
+        await downloadSvgAsPng(morosidadRef, `Grafico_Morosidad_${user.tenantName}.png`);
+        downloaded = true;
+      }
 
-    if (downloaded) {
-      toast.success('Gráficos descargados exitosamente');
-    } else {
-      toast.error('No se pudo generar las imágenes');
+      if (downloaded) {
+        toast.success('Gráficos descargados exitosamente');
+      } else {
+        toast.error('No hay datos visibles para descargar');
+      }
+    } catch (error: any) {
+      console.error('Error descargando imagen:', error);
+      toast.error('Hubo un error al generar la imagen: ' + (error.message || error.toString()));
     }
   };
 

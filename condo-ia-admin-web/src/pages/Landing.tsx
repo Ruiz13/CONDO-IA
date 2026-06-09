@@ -1,6 +1,5 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, Smartphone, LayoutDashboard, ShieldCheck, CheckCircle2, ArrowRight, CalendarDays, Receipt } from 'lucide-react';
+import { Bot, Smartphone, ShieldCheck, CheckCircle2, ArrowRight, CalendarDays, Receipt } from 'lucide-react';
 
 export default function Landing() {
   const navigate = useNavigate();

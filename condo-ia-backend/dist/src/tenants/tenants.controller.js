@@ -62,6 +62,15 @@ let TenantsController = class TenantsController {
     async clearFinances(tenantId) {
         return this.tenantsService.clearFinances(tenantId);
     }
+    async resetAllResidentPasswords() {
+        return this.tenantsService.resetAllResidentPasswords();
+    }
+    async debugUsers() {
+        return this.tenantsService.debugUsers();
+    }
+    async reactivateAllTenants() {
+        return this.tenantsService.reactivateAllTenants();
+    }
 };
 exports.TenantsController = TenantsController;
 __decorate([
@@ -165,6 +174,24 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], TenantsController.prototype, "clearFinances", null);
+__decorate([
+    (0, common_1.Post)('reset-all-resident-passwords'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "resetAllResidentPasswords", null);
+__decorate([
+    (0, common_1.Get)('debug-users'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "debugUsers", null);
+__decorate([
+    (0, common_1.Post)('reactivate-all'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "reactivateAllTenants", null);
 exports.TenantsController = TenantsController = __decorate([
     (0, common_1.Controller)('api/tenants'),
     __metadata("design:paramtypes", [tenants_service_1.TenantsService])

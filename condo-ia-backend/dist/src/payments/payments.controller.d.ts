@@ -21,6 +21,7 @@ export declare class PaymentsController {
         paymentMethod: string;
         referenceNumber: string | null;
         ocrConfidence: number | null;
+        receiptUrl: string | null;
     })[]>;
     approvePayment(id: string, adminId: string): Promise<({
         unit: {
@@ -52,12 +53,14 @@ export declare class PaymentsController {
         paymentMethod: string;
         referenceNumber: string | null;
         ocrConfidence: number | null;
+        receiptUrl: string | null;
     }) | null>;
     extractOcrData(base64Image: string): Promise<any>;
     reportPayment(body: {
         unitId: string;
         amount: number;
         referenceNumber: string;
+        receiptBase64?: string;
     }): Promise<{
         id: string;
         createdAt: Date;
@@ -68,6 +71,7 @@ export declare class PaymentsController {
         paymentMethod: string;
         referenceNumber: string | null;
         ocrConfidence: number | null;
+        receiptUrl: string | null;
     }>;
     getUserPayments(userId: string): Promise<({
         unit: {
@@ -88,5 +92,6 @@ export declare class PaymentsController {
         paymentMethod: string;
         referenceNumber: string | null;
         ocrConfidence: number | null;
+        receiptUrl: string | null;
     })[]>;
 }

@@ -1,10 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
@@ -14,6 +47,8 @@ exports.PaymentsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
 const generative_ai_1 = require("@google/generative-ai");
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 const email_service_1 = require("../email/email.service");
 let PaymentsService = PaymentsService_1 = class PaymentsService {
     prisma;
@@ -134,7 +169,7 @@ No incluyas markdown, comillas raras ni texto adicional.`;
         });
         if (!unit)
             throw new Error('Unit not found');
-        return this.prisma.payment.create({
+        const payment = await this.prisma.payment.create({
             data: {
                 unitId: data.unitId,
                 amount: data.amount,
@@ -145,6 +180,38 @@ No incluyas markdown, comillas raras ni texto adicional.`;
                 ocrConfidence: data.ocrConfidence
             }
         });
+        if (data.receiptBase64) {
+            try {
+                const uploadDir = path.join(process.cwd(), 'uploads');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                const fileName = `${payment.id}.jpg`;
+                const filePath = path.join(uploadDir, fileName);
+                const base64Data = data.receiptBase64.replace(/^data:image\/\w+;base64,/, "");
+                await fs.promises.writeFile(filePath, base64Data, 'base64');
+                await this.prisma.payment.update({
+                    where: { id: payment.id },
+                    data: { receiptUrl: `/uploads/${fileName}` }
+                });
+            }
+            catch (err) {
+                this.logger.error('Error guardando imagen de pago', err);
+            }
+        }
+        const pendingInvoices = await this.prisma.invoice.findMany({
+            where: { unitId: data.unitId, status: { in: ['PENDING', 'PARTIAL'] } }
+        });
+        const totalDebt = pendingInvoices.reduce((acc, inv) => acc + (inv.totalAmount - inv.amountPaid), 0);
+        const matchesTotal = Math.abs(totalDebt - data.amount) < 0.01;
+        const matchesSingle = pendingInvoices.some(inv => Math.abs((inv.totalAmount - inv.amountPaid) - data.amount) < 0.01);
+        if (totalDebt > 0 && (matchesTotal || matchesSingle)) {
+            const approvedPayment = await this.approvePayment(payment.id);
+            if (approvedPayment) {
+                return approvedPayment;
+            }
+        }
+        return payment;
     }
     async getUserPayments(userId) {
         return this.prisma.payment.findMany({

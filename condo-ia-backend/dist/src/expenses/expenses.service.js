@@ -18,15 +18,15 @@ let ExpensesService = class ExpensesService {
         this.prisma = prisma;
     }
     async createExpense(tenantId, description, amount, appliesTo, providerName, providerInvoice, observation) {
+        const finalDescription = observation ? `${description} | Observación: ${observation}` : description;
         return this.prisma.expense.create({
             data: {
                 tenantId,
-                description,
+                description: finalDescription,
                 amount,
                 appliesTo,
                 providerName,
-                providerInvoice,
-                observation
+                providerInvoice
             }
         });
     }

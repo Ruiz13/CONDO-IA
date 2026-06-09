@@ -153,6 +153,7 @@ export declare class TenantsService {
             paymentMethod: string;
             referenceNumber: string | null;
             ocrConfidence: number | null;
+            receiptUrl: string | null;
         })[];
         expenses: {
             id: string;
@@ -166,7 +167,6 @@ export declare class TenantsService {
             isBilled: boolean;
             providerName: string | null;
             providerInvoice: string | null;
-            observation: string | null;
         }[];
     }>;
     deleteUnit(tenantId: string, unitId: string): Promise<{
@@ -176,5 +176,30 @@ export declare class TenantsService {
     clearFinances(tenantId: string): Promise<{
         success: boolean;
         message: string;
+    }>;
+    resetAllResidentPasswords(): Promise<{
+        success: boolean;
+        updated: number;
+        newPassword: string;
+    }>;
+    debugUsers(): Promise<{
+        total: number;
+        users: {
+            tenant: {
+                name: string;
+                isActive: boolean;
+            } | null;
+            email: string;
+            role: string;
+        }[];
+    }>;
+    reactivateAllTenants(): Promise<{
+        success: boolean;
+        reactivated: number;
+        tenants: {
+            id: string;
+            name: string;
+            isActive: boolean;
+        }[];
     }>;
 }

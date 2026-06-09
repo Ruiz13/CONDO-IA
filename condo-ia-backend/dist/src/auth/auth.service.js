@@ -90,11 +90,12 @@ let AuthService = AuthService_1 = class AuthService {
             }
         };
     }
-    async changePassword(userId, newPasswordHash) {
+    async changePassword(userId, newPasswordPlain) {
+        const passwordHash = await bcrypt.hash(newPasswordPlain, 10);
         const user = await this.prisma.user.update({
             where: { id: userId },
             data: {
-                passwordHash: newPasswordHash,
+                passwordHash,
                 mustChangePassword: false,
             },
         });

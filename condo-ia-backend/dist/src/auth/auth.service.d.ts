@@ -17,7 +17,7 @@ export declare class AuthService {
             avatarBase64: string | null;
         };
     }>;
-    changePassword(userId: string, newPasswordHash: string): Promise<{
+    changePassword(userId: string, newPasswordPlain: string): Promise<{
         success: boolean;
         message: string;
     }>;

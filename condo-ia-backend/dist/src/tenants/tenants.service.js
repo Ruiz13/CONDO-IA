@@ -376,6 +376,40 @@ let TenantsService = class TenantsService {
             return { success: true, message: 'Finanzas limpiadas correctamente' };
         });
     }
+    async resetAllResidentPasswords() {
+        const bcrypt = require('bcrypt');
+        const hash = await bcrypt.hash('admin123', 10);
+        const result = await this.prisma.user.updateMany({
+            where: { role: 'RESIDENT' },
+            data: { passwordHash: hash, mustChangePassword: true }
+        });
+        return { success: true, updated: result.count, newPassword: 'admin123' };
+    }
+    async debugUsers() {
+        const users = await this.prisma.user.findMany({
+            select: {
+                email: true,
+                role: true,
+                tenant: { select: { name: true, isActive: true } }
+            },
+            orderBy: { role: 'asc' }
+        });
+        return { total: users.length, users };
+    }
+    async reactivateAllTenants() {
+        const result = await this.prisma.tenant.updateMany({
+            where: { isActive: false },
+            data: { isActive: true }
+        });
+        const tenants = await this.prisma.tenant.findMany({
+            select: { id: true, name: true, isActive: true }
+        });
+        return {
+            success: true,
+            reactivated: result.count,
+            tenants
+        };
+    }
 };
 exports.TenantsService = TenantsService;
 exports.TenantsService = TenantsService = __decorate([

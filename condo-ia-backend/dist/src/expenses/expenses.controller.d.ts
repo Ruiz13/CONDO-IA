@@ -22,7 +22,6 @@ export declare class ExpensesController {
         isBilled: boolean;
         providerName: string | null;
         providerInvoice: string | null;
-        observation: string | null;
     }>;
     getExpenses(tenantId: string): Promise<{
         id: string;
@@ -36,7 +35,6 @@ export declare class ExpensesController {
         isBilled: boolean;
         providerName: string | null;
         providerInvoice: string | null;
-        observation: string | null;
     }[]>;
     deleteExpense(id: string): Promise<{
         id: string;
@@ -50,6 +48,5 @@ export declare class ExpensesController {
         isBilled: boolean;
         providerName: string | null;
         providerInvoice: string | null;
-        observation: string | null;
     }>;
 }

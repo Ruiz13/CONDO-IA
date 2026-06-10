@@ -21,10 +21,10 @@ export declare class InvoicesController {
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     } & {
         id: string;

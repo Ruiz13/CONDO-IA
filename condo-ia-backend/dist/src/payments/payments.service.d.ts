@@ -10,10 +10,10 @@ export declare class PaymentsService {
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     } & {
         id: string;
@@ -32,20 +32,20 @@ export declare class PaymentsService {
             owner: {
                 id: string;
                 createdAt: Date;
-                tenantId: string | null;
                 email: string;
                 passwordHash: string;
                 role: string;
                 mustChangePassword: boolean;
                 avatarBase64: string | null;
+                tenantId: string | null;
             };
         } & {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     } & {
         id: string;
@@ -82,10 +82,10 @@ export declare class PaymentsService {
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     } & {
         id: string;

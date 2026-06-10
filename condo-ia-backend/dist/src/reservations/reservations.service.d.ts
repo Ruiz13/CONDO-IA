@@ -5,20 +5,20 @@ export declare class ReservationsService {
     getUnitsByOwner(tenantId: string, ownerId: string): Promise<{
         id: string;
         tenantId: string;
-        ownerId: string;
         unitNumber: string;
         aliquotPercentage: number;
         isCommercial: boolean;
+        ownerId: string;
     }[]>;
     checkDebt(tenantId: string, unitId: string): Promise<boolean>;
     createReservation(tenantId: string, unitId: string, area: string, date: Date): Promise<{
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     } & {
         id: string;
@@ -37,10 +37,10 @@ export declare class ReservationsService {
         } & {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     } & {
         id: string;

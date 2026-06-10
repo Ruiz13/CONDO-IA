@@ -4,26 +4,26 @@ export declare class CommunicationsService {
     constructor(prisma: PrismaService);
     createAnnouncement(tenantId: string, title: string, content: string, imageUrl?: string): Promise<{
         id: string;
-        title: string;
-        content: string;
         createdAt: Date;
         tenantId: string;
+        title: string;
+        content: string;
         imageUrl: string | null;
     }>;
     getAnnouncements(tenantId: string): Promise<{
         id: string;
-        title: string;
-        content: string;
         createdAt: Date;
         tenantId: string;
+        title: string;
+        content: string;
         imageUrl: string | null;
     }[]>;
     deleteAnnouncement(id: string): Promise<{
         id: string;
-        title: string;
-        content: string;
         createdAt: Date;
         tenantId: string;
+        title: string;
+        content: string;
         imageUrl: string | null;
     }>;
     createPoll(tenantId: string, question: string, options: string[]): Promise<{

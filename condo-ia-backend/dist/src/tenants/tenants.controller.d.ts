@@ -28,7 +28,6 @@ export declare class TenantsController {
         }[];
     } & {
         id: string;
-        createdAt: Date;
         name: string;
         geminiApiKey: string | null;
         isActive: boolean;
@@ -39,6 +38,9 @@ export declare class TenantsController {
         state: string | null;
         country: string | null;
         phone: string | null;
+        whatsappWelcomeMessage: string | null;
+        whatsappSystemPrompt: string | null;
+        createdAt: Date;
     })[]>;
     createTenantWithAdmin(body: {
         tenantName: string;
@@ -50,10 +52,6 @@ export declare class TenantsController {
         tenantId: string;
     }>;
     getUnitsByTenant(tenantId: string): Promise<({
-        owner: {
-            id: string;
-            email: string;
-        };
         invoices: {
             id: string;
             createdAt: Date;
@@ -65,13 +63,17 @@ export declare class TenantsController {
             amountPaid: number;
             status: string;
         }[];
+        owner: {
+            id: string;
+            email: string;
+        };
     } & {
         id: string;
         tenantId: string;
-        ownerId: string;
         unitNumber: string;
         aliquotPercentage: number;
         isCommercial: boolean;
+        ownerId: string;
     })[]>;
     createUnitAndOwner(tenantId: string, body: {
         unitNumber: string;
@@ -83,10 +85,10 @@ export declare class TenantsController {
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     }>;
     deleteUnit(tenantId: string, unitId: string): Promise<{
@@ -112,10 +114,10 @@ export declare class TenantsController {
             unit: {
                 id: string;
                 tenantId: string;
-                ownerId: string;
                 unitNumber: string;
                 aliquotPercentage: number;
                 isCommercial: boolean;
+                ownerId: string;
             };
         } & {
             id: string;
@@ -149,7 +151,6 @@ export declare class TenantsController {
     }>;
     toggleTenantStatus(tenantId: string): Promise<{
         id: string;
-        createdAt: Date;
         name: string;
         geminiApiKey: string | null;
         isActive: boolean;
@@ -160,6 +161,9 @@ export declare class TenantsController {
         state: string | null;
         country: string | null;
         phone: string | null;
+        whatsappWelcomeMessage: string | null;
+        whatsappSystemPrompt: string | null;
+        createdAt: Date;
     }>;
     resetAdminPassword(tenantId: string): Promise<{
         success: boolean;

@@ -28,7 +28,6 @@ export declare class TenantsService {
         }[];
     } & {
         id: string;
-        createdAt: Date;
         name: string;
         geminiApiKey: string | null;
         isActive: boolean;
@@ -39,6 +38,9 @@ export declare class TenantsService {
         state: string | null;
         country: string | null;
         phone: string | null;
+        whatsappWelcomeMessage: string | null;
+        whatsappSystemPrompt: string | null;
+        createdAt: Date;
     })[]>;
     deleteTenant(tenantId: string): Promise<{
         success: boolean;
@@ -46,7 +48,6 @@ export declare class TenantsService {
     }>;
     toggleTenantStatus(tenantId: string): Promise<{
         id: string;
-        createdAt: Date;
         name: string;
         geminiApiKey: string | null;
         isActive: boolean;
@@ -57,6 +58,9 @@ export declare class TenantsService {
         state: string | null;
         country: string | null;
         phone: string | null;
+        whatsappWelcomeMessage: string | null;
+        whatsappSystemPrompt: string | null;
+        createdAt: Date;
     }>;
     updateTenantLogo(tenantId: string, logoBase64: string): Promise<{
         message: string;
@@ -85,10 +89,6 @@ export declare class TenantsService {
         tenantId: string;
     }>;
     getUnitsByTenant(tenantId: string): Promise<({
-        owner: {
-            id: string;
-            email: string;
-        };
         invoices: {
             id: string;
             createdAt: Date;
@@ -100,23 +100,27 @@ export declare class TenantsService {
             amountPaid: number;
             status: string;
         }[];
+        owner: {
+            id: string;
+            email: string;
+        };
     } & {
         id: string;
         tenantId: string;
-        ownerId: string;
         unitNumber: string;
         aliquotPercentage: number;
         isCommercial: boolean;
+        ownerId: string;
     })[]>;
     createUnitAndOwner(tenantId: string, unitNumber: string, ownerEmail: string, ownerPassword: string, aliquotPercentage: number): Promise<{
         success: boolean;
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     }>;
     getTenantStats(tenantId: string): Promise<{
@@ -138,10 +142,10 @@ export declare class TenantsService {
             unit: {
                 id: string;
                 tenantId: string;
-                ownerId: string;
                 unitNumber: string;
                 aliquotPercentage: number;
                 isCommercial: boolean;
+                ownerId: string;
             };
         } & {
             id: string;

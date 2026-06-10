@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Vote, LayoutDashboard, Settings, FileText, Loader2, Megaphone, Bot, Trash2, TrendingUp, TrendingDown, Clock, Download, CalendarDays, Check, X, MessageCircle, RefreshCw } from 'lucide-react';
+import { LogOut, Users, Vote, LayoutDashboard, Settings, FileText, Loader2, Megaphone, Bot, Trash2, TrendingUp, TrendingDown, Clock, Download, CalendarDays, Check, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -10,9 +10,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('resumen');
-  const [whatsappStatus, setWhatsappStatus] = useState<any>({ connected: false });
-  const [whatsappQr, setWhatsappQr] = useState<string | null>(null);
-  const [loadingWhatsapp, setLoadingWhatsapp] = useState(false);
+
   
   // Estados para filtros
   const currentYear = new Date().getFullYear().toString();
@@ -873,15 +871,7 @@ export default function AdminDashboard() {
             <span className="font-medium">Cerebro IA</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('whatsapp-bot')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-              activeTab === 'whatsapp-bot' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <MessageCircle className="w-5 h-5 text-green-500" />
-            <span className="font-medium">WhatsApp Bot</span>
-          </button>
+
 
           <button
             onClick={() => setActiveTab('perfil')}
@@ -1794,83 +1784,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === 'whatsapp-bot' && (
-          <div className="space-y-6">
-            <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-8 max-w-3xl mx-auto text-center">
-              <MessageCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-3xl font-bold mb-2">Contestadora WhatsApp</h2>
-              <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-                Conecta tu número comercial para que CONDO IA responda automáticamente y de forma profesional a todas las solicitudes de demostración las 24 horas del día.
-              </p>
-
-              <div className="bg-[#050512] border border-white/5 rounded-2xl p-8 shadow-2xl">
-                {whatsappStatus?.connected ? (
-                  <div className="space-y-4">
-                    <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Check className="w-10 h-10 text-green-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-green-400">¡Bot Conectado y Activo!</h3>
-                    <p className="text-gray-400">El sistema está escuchando y respondiendo automáticamente.</p>
-                    <button 
-                      onClick={async () => {
-                        await fetch('https://condo-ia-backend.onrender.com/api/whatsapp/logout', { method: 'POST' });
-                        toast.success('Sesión cerrada');
-                        setWhatsappStatus({ connected: false });
-                        setWhatsappQr(null);
-                      }}
-                      className="mt-6 px-6 py-2 bg-red-600/20 text-red-400 hover:bg-red-600/30 rounded-xl font-bold transition-all"
-                    >
-                      Desconectar Teléfono
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="flex flex-col items-center">
-                      {whatsappQr ? (
-                        <>
-                          <div className="bg-white p-4 rounded-2xl mb-4">
-                            <img src={whatsappQr} alt="WhatsApp QR Code" className="w-64 h-64" />
-                          </div>
-                          <p className="text-sm text-gray-400 mb-6">Abre WhatsApp en tu celular, ve a "Dispositivos Vinculados" y escanea este código.</p>
-                        </>
-                      ) : (
-                        <div className="w-64 h-64 border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center text-gray-500 mb-4">
-                          <Loader2 className="w-8 h-8 animate-spin mb-2" />
-                          <p>Generando Código QR...</p>
-                        </div>
-                      )}
-                      
-                      <button 
-                        onClick={async () => {
-                          setLoadingWhatsapp(true);
-                          try {
-                            const statRes = await fetch('https://condo-ia-backend.onrender.com/api/whatsapp/status');
-                            const statData = await statRes.json();
-                            setWhatsappStatus(statData);
-                            if (!statData.connected) {
-                              const qrRes = await fetch('https://condo-ia-backend.onrender.com/api/whatsapp/qr');
-                              const qrData = await qrRes.json();
-                              if (qrData.qrImage) setWhatsappQr(qrData.qrImage);
-                            }
-                          } catch (e) {
-                            toast.error('Error conectando al servidor de WhatsApp');
-                          } finally {
-                            setLoadingWhatsapp(false);
-                          }
-                        }}
-                        disabled={loadingWhatsapp}
-                        className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-xl font-bold transition-all flex items-center gap-2"
-                      >
-                        <RefreshCw className={`w-5 h-5 ${loadingWhatsapp ? 'animate-spin' : ''}`} />
-                        {loadingWhatsapp ? 'Verificando...' : 'Obtener QR de Conexión'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
 
         {activeTab === 'perfil' && (
           <div className="space-y-8">

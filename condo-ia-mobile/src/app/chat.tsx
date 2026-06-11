@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
   StyleSheet, Text, View, TextInput, TouchableOpacity,
   ScrollView, SafeAreaView, KeyboardAvoidingView,
-  Platform, ActivityIndicator
+  Platform, ActivityIndicator, Clipboard, Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -43,6 +43,11 @@ export default function ChatScreen() {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    Clipboard.setString(text);
+    Alert.alert('Copiado', 'Mensaje copiado al portapapeles');
   };
 
   const sendMessage = async () => {
@@ -116,12 +121,16 @@ export default function ChatScreen() {
                 msg.isBot ? styles.messageRowLeft : styles.messageRowRight
               ]}
             >
-              <View style={[
-                styles.messageBubble,
-                msg.isBot ? styles.botBubble : styles.userBubble
-              ]}>
-                {/* Texto completo del mensaje — sin truncar */}
-                <Text style={msg.isBot ? styles.botText : styles.userText}>
+              <TouchableOpacity 
+                activeOpacity={0.9} 
+                onLongPress={() => copyToClipboard(msg.text)}
+                style={[
+                  styles.messageBubble,
+                  msg.isBot ? styles.botBubble : styles.userBubble
+                ]}
+              >
+                {/* Texto completo del mensaje — sin truncar y seleccionable */}
+                <Text selectable={true} style={msg.isBot ? styles.botText : styles.userText}>
                   {msg.text}
                 </Text>
                 <Text style={[
@@ -130,7 +139,7 @@ export default function ChatScreen() {
                 ]}>
                   {timeStr}
                 </Text>
-              </View>
+              </TouchableOpacity>
             </View>
           ))}
 

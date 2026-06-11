@@ -73,8 +73,8 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <View style={styles.headerContainer}>
           <Image
-            source={require("../../assets/images/logo.png")}
-            style={{ width: 250, height: 80, marginBottom: 16 }}
+            source={require("../../assets/images/logo-glow.png")}
+            style={{ width: 250, height: 110, marginBottom: 16 }}
             resizeMode="contain"
           />
           <Text style={styles.subtitle}>
@@ -91,7 +91,7 @@ export default function LoginScreen() {
             autoCapitalize="none"
             autoCorrect={false}
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => setEmail(text.toLowerCase())}
           />
           {/* Pista del formato de correo */}
           <Text style={styles.emailHint}>

@@ -48,8 +48,8 @@ export default function HomeScreen() {
       {/* Header Logo */}
       <View style={styles.homeHeader}>
         <Image 
-          source={require("../../assets/images/logo.png")} 
-          style={{ width: 180, height: 60 }} 
+          source={require("../../assets/images/logo-glow.png")} 
+          style={{ width: 200, height: 75 }} 
           resizeMode="contain" 
         />
         <Text style={styles.tenantNameText}>{user?.tenantName || 'Mi Condominio'}</Text>

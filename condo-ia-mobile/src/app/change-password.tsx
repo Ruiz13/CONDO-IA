@@ -15,14 +15,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { API_URL } from "../constants/api";
 
 export default function ChangePasswordScreen() {
+  const { user, updateUser } = useAuth();
+  const [email, setEmail] = useState(user?.email || "");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { user, updateUser } = useAuth();
 
-  const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) {
-      Alert.alert("Error", "Por favor completa ambos campos");
+  const handleChangeProfile = async () => {
+    if (!email.trim() || !newPassword || !confirmPassword) {
+      Alert.alert("Error", "Por favor completa todos los campos");
       return;
     }
 
@@ -38,23 +39,37 @@ export default function ChangePasswordScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch(API_URL("/api/auth/change-password"), {
+      const response = await fetch(API_URL("/api/auth/update-profile"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Bypass-Tunnel-Reminder": "true",
         },
-        body: JSON.stringify({ userId: user?.id, newPassword }),
+        body: JSON.stringify({ 
+          userId: user?.id, 
+          newEmail: email.trim().toLowerCase(), 
+          newPassword 
+        }),
       });
 
       if (!response.ok) {
-        throw new Error("No se pudo actualizar la contraseña");
+        let errorMsg = "No se pudo actualizar la cuenta";
+        try {
+          const errData = await response.json();
+          errorMsg = errData.message || errorMsg;
+        } catch (_) {}
+        throw new Error(errorMsg);
       }
 
-      // Update the context so we can navigate to the main dashboard
-      updateUser({ mustChangePassword: false });
+      const resData = await response.json();
 
-      Alert.alert("Éxito", "Tu contraseña ha sido actualizada correctamente", [
+      // Update the context and AsyncStorage so we can navigate to the main dashboard
+      await updateUser({ 
+        email: resData.user.email,
+        mustChangePassword: false 
+      });
+
+      Alert.alert("Éxito", "Tu cuenta ha sido configurada y guardada correctamente.", [
         { text: "Ir al Inicio", onPress: () => router.replace("/") },
       ]);
     } catch (error: any) {
@@ -79,12 +94,24 @@ export default function ChangePasswordScreen() {
           />
           <Text style={styles.title}>Seguridad</Text>
           <Text style={styles.subtitle}>
-            Por tu seguridad, debes cambiar tu contraseña temporal antes de
-            continuar.
+            Configura tu correo definitivo y tu nueva contraseña para activar tu cuenta.
           </Text>
         </View>
 
         <View style={styles.formContainer}>
+          <Text style={styles.label}>CORREO ELECTRÓNICO</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Tu correo"
+            placeholderTextColor="#64748b"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={email}
+            onChangeText={(text) => setEmail(text.toLowerCase())}
+          />
+
+          <Text style={styles.label}>NUEVA CONTRASEÑA</Text>
           <TextInput
             style={styles.input}
             placeholder="Nueva Contraseña"
@@ -93,6 +120,8 @@ export default function ChangePasswordScreen() {
             value={newPassword}
             onChangeText={setNewPassword}
           />
+
+          <Text style={styles.label}>CONFIRMAR CONTRASEÑA</Text>
           <TextInput
             style={styles.input}
             placeholder="Confirmar Contraseña"
@@ -104,13 +133,13 @@ export default function ChangePasswordScreen() {
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleChangePassword}
+            onPress={handleChangeProfile}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.buttonText}>Actualizar Contraseña</Text>
+              <Text style={styles.buttonText}>Actualizar y Activar</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -146,6 +175,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#334155",
+  },
+  label: {
+    color: "#94a3b8",
+    fontSize: 11,
+    fontWeight: "bold",
+    marginBottom: 6,
+    marginLeft: 4,
+    letterSpacing: 1,
   },
   button: {
     backgroundColor: "#10b981",

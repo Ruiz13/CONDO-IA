@@ -45,7 +45,8 @@
           "photosPermission": "CondoIA necesita acceso a tu galería para adjuntar comprobantes de pago.",
           "cameraPermission": "CondoIA necesita acceso a tu cámara para tomar fotos de los comprobantes de pago."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

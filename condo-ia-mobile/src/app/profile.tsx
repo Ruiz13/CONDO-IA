@@ -13,6 +13,7 @@ import { API_URL } from '../constants/api';
 // Mapeo de roles del backend a etiquetas legibles
 const ROLE_LABELS: Record<string, string> = {
   RESIDENT: 'Propietario',
+  OWNER: 'Propietario',
   ADMIN: 'Administrador',
   SUPER_ADMIN: 'Super Administrador',
 };

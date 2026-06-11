@@ -29,38 +29,49 @@ let ChatService = ChatService_1 = class ChatService {
         try {
             let tenantId = null;
             let contextString = '';
+            let validUser = false;
             if (userId) {
                 const user = await this.prisma.user.findUnique({ where: { id: userId } });
-                if (user)
+                if (user) {
+                    validUser = true;
                     tenantId = user.tenantId;
-                await this.prisma.message.create({
-                    data: {
-                        text: userMessage,
-                        isBot: false,
-                        userId,
-                        tenantId
-                    },
-                });
-                const units = await this.prisma.unit.findMany({
-                    where: { ownerId: userId },
-                });
-                if (units.length > 0) {
-                    const unitIds = units.map(u => u.id);
-                    const unitNames = units.map(u => u.unitNumber).join(', ');
-                    const pendingInvoices = await this.prisma.invoice.findMany({
-                        where: { unitId: { in: unitIds }, status: { in: ['PENDING', 'PARTIAL'] } },
+                    try {
+                        await this.prisma.message.create({
+                            data: {
+                                text: userMessage,
+                                isBot: false,
+                                userId,
+                                tenantId
+                            },
+                        });
+                    }
+                    catch (dbErr) {
+                        this.logger.warn('No se pudo guardar mensaje del usuario en DB', dbErr);
+                    }
+                    const units = await this.prisma.unit.findMany({
+                        where: { ownerId: userId },
                     });
-                    const totalDebt = pendingInvoices.reduce((acc, inv) => acc + (inv.totalAmount - inv.amountPaid), 0);
-                    const pendingPayments = await this.prisma.payment.findMany({
-                        where: { unitId: { in: unitIds }, status: 'PENDING' },
-                    });
-                    contextString = `\nContexto del usuario actual:
+                    if (units.length > 0) {
+                        const unitIds = units.map(u => u.id);
+                        const unitNames = units.map(u => u.unitNumber).join(', ');
+                        const pendingInvoices = await this.prisma.invoice.findMany({
+                            where: { unitId: { in: unitIds }, status: { in: ['PENDING', 'PARTIAL'] } },
+                        });
+                        const totalDebt = pendingInvoices.reduce((acc, inv) => acc + (inv.totalAmount - inv.amountPaid), 0);
+                        const pendingPayments = await this.prisma.payment.findMany({
+                            where: { unitId: { in: unitIds }, status: 'PENDING' },
+                        });
+                        contextString = `\nContexto del usuario actual:
 - Unidades asociadas: ${unitNames}
 - Deuda total pendiente: $${totalDebt.toFixed(2)} (${pendingInvoices.length} facturas)
 - Pagos en revisión: ${pendingPayments.length}`;
+                    }
+                    else {
+                        contextString = `\nContexto del usuario actual: No tiene unidades asociadas.`;
+                    }
                 }
                 else {
-                    contextString = `\nContexto del usuario actual: No tiene unidades asociadas.`;
+                    this.logger.warn(`Usuario con id ${userId} no encontrado en la DB`);
                 }
             }
             let knowledgeContext = '';
@@ -84,15 +95,20 @@ Mensaje del residente: ${userMessage}`;
             const result = await model.generateContent(prompt);
             const response = await result.response;
             const botText = response.text();
-            if (userId) {
-                await this.prisma.message.create({
-                    data: {
-                        text: botText,
-                        isBot: true,
-                        userId,
-                        tenantId
-                    },
-                });
+            if (userId && validUser) {
+                try {
+                    await this.prisma.message.create({
+                        data: {
+                            text: botText,
+                            isBot: true,
+                            userId,
+                            tenantId
+                        },
+                    });
+                }
+                catch (dbErr) {
+                    this.logger.warn('No se pudo guardar respuesta del bot en DB', dbErr);
+                }
             }
             return botText;
         }

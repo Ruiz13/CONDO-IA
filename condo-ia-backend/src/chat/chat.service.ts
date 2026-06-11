@@ -117,7 +117,7 @@ Mensaje del residente: ${userMessage}`;
       return botText;
     } catch (error) {
       this.logger.error('Error al contactar a Gemini API', error);
-      return 'Lo siento mucho, mi conexión cerebral está fallando en este momento. 🤕 Inténtalo más tarde.';
+      return `Lo siento mucho, mi conexión cerebral está fallando en este momento. 🤕 Inténtalo más tarde. (Detalle: ${error.message || error})`;
     }
   }
 

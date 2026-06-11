@@ -59,13 +59,21 @@ let ChatService = ChatService_1 = class ChatService {
                             where: { unitId: { in: unitIds }, status: { in: ['PENDING', 'PARTIAL'] } },
                         });
                         const totalDebt = pendingInvoices.reduce((acc, inv) => acc + (inv.totalAmount - inv.amountPaid), 0);
-                        const pendingPayments = await this.prisma.payment.findMany({
-                            where: { unitId: { in: unitIds }, status: 'PENDING' },
-                        });
+                        let pendingPaymentsCount = 0;
+                        try {
+                            const pendingPayments = await this.prisma.payment.findMany({
+                                where: { unitId: { in: unitIds }, status: 'PENDING' },
+                                select: { id: true }
+                            });
+                            pendingPaymentsCount = pendingPayments.length;
+                        }
+                        catch (payErr) {
+                            this.logger.warn('No se pudo consultar pagos pendientes debido a diferencia de esquema:', payErr);
+                        }
                         contextString = `\nContexto del usuario actual:
 - Unidades asociadas: ${unitNames}
 - Deuda total pendiente: $${totalDebt.toFixed(2)} (${pendingInvoices.length} facturas)
-- Pagos en revisión: ${pendingPayments.length}`;
+- Pagos en revisión: ${pendingPaymentsCount}`;
                     }
                     else {
                         contextString = `\nContexto del usuario actual: No tiene unidades asociadas.`;
@@ -115,7 +123,7 @@ Mensaje del residente: ${userMessage}`;
         }
         catch (error) {
             this.logger.error('Error al contactar a Gemini API', error);
-            return `Lo siento mucho, mi conexión cerebral está fallando en este momento. 🤕 Inténtalo más tarde. (Detalle: ${error.message || error})`;
+            return 'Lo siento mucho, mi conexión cerebral está fallando en este momento. 🤕 Inténtalo más tarde.';
         }
     }
     async getChatHistory(userId) {

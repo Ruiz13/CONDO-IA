@@ -38,8 +38,6 @@ export declare class TenantsService {
         state: string | null;
         country: string | null;
         phone: string | null;
-        whatsappWelcomeMessage: string | null;
-        whatsappSystemPrompt: string | null;
         createdAt: Date;
     })[]>;
     deleteTenant(tenantId: string): Promise<{
@@ -58,8 +56,6 @@ export declare class TenantsService {
         state: string | null;
         country: string | null;
         phone: string | null;
-        whatsappWelcomeMessage: string | null;
-        whatsappSystemPrompt: string | null;
         createdAt: Date;
     }>;
     updateTenantLogo(tenantId: string, logoBase64: string): Promise<{

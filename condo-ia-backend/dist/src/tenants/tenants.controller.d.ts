@@ -38,8 +38,6 @@ export declare class TenantsController {
         state: string | null;
         country: string | null;
         phone: string | null;
-        whatsappWelcomeMessage: string | null;
-        whatsappSystemPrompt: string | null;
         createdAt: Date;
     })[]>;
     createTenantWithAdmin(body: {
@@ -161,8 +159,6 @@ export declare class TenantsController {
         state: string | null;
         country: string | null;
         phone: string | null;
-        whatsappWelcomeMessage: string | null;
-        whatsappSystemPrompt: string | null;
         createdAt: Date;
     }>;
     resetAdminPassword(tenantId: string): Promise<{

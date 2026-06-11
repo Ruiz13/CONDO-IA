@@ -57,15 +57,22 @@ export class ChatService {
             });
             const totalDebt = pendingInvoices.reduce((acc, inv) => acc + (inv.totalAmount - inv.amountPaid), 0);
 
-            // Buscar pagos en revisión
-            const pendingPayments = await this.prisma.payment.findMany({
-              where: { unitId: { in: unitIds }, status: 'PENDING' },
-            });
+            // Buscar pagos en revisión (envuelto en try/catch para evitar caídas si el esquema físico difiere)
+            let pendingPaymentsCount = 0;
+            try {
+              const pendingPayments = await this.prisma.payment.findMany({
+                where: { unitId: { in: unitIds }, status: 'PENDING' },
+                select: { id: true } // Solo seleccionamos id para evitar traer campos inexistentes como receiptUrl
+              });
+              pendingPaymentsCount = pendingPayments.length;
+            } catch (payErr) {
+              this.logger.warn('No se pudo consultar pagos pendientes debido a diferencia de esquema:', payErr);
+            }
 
             contextString = `\nContexto del usuario actual:
 - Unidades asociadas: ${unitNames}
 - Deuda total pendiente: $${totalDebt.toFixed(2)} (${pendingInvoices.length} facturas)
-- Pagos en revisión: ${pendingPayments.length}`;
+- Pagos en revisión: ${pendingPaymentsCount}`;
           } else {
             contextString = `\nContexto del usuario actual: No tiene unidades asociadas.`;
           }
@@ -117,7 +124,7 @@ Mensaje del residente: ${userMessage}`;
       return botText;
     } catch (error) {
       this.logger.error('Error al contactar a Gemini API', error);
-      return `Lo siento mucho, mi conexión cerebral está fallando en este momento. 🤕 Inténtalo más tarde. (Detalle: ${error.message || error})`;
+      return 'Lo siento mucho, mi conexión cerebral está fallando en este momento. 🤕 Inténtalo más tarde.';
     }
   }
 

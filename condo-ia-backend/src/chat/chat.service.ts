@@ -19,8 +19,11 @@ export class ChatService {
       let contextString = '';
       let validUser = false;
 
-      if (userId) {
-        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      // Sanitizar userId: si es string vacío o espacios, tratarlo como indefinido
+      const cleanUserId = (userId && userId.trim()) ? userId.trim() : undefined;
+
+      if (cleanUserId) {
+        const user = await this.prisma.user.findUnique({ where: { id: cleanUserId } });
         if (user) {
           validUser = true;
           tenantId = user.tenantId;
@@ -31,7 +34,7 @@ export class ChatService {
               data: { 
                 text: userMessage, 
                 isBot: false,
-                userId,
+                userId: cleanUserId,
                 tenantId
               },
             });
@@ -96,13 +99,13 @@ Mensaje del residente: ${userMessage}`;
       const botText = response.text();
 
       // Guardar respuesta del bot (solo si el usuario es válido)
-      if (userId && validUser) {
+      if (cleanUserId && validUser) {
         try {
           await this.prisma.message.create({
             data: { 
               text: botText, 
               isBot: true,
-              userId,
+              userId: cleanUserId,
               tenantId
             },
           });

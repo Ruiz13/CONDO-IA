@@ -30,8 +30,9 @@ let ChatService = ChatService_1 = class ChatService {
             let tenantId = null;
             let contextString = '';
             let validUser = false;
-            if (userId) {
-                const user = await this.prisma.user.findUnique({ where: { id: userId } });
+            const cleanUserId = (userId && userId.trim()) ? userId.trim() : undefined;
+            if (cleanUserId) {
+                const user = await this.prisma.user.findUnique({ where: { id: cleanUserId } });
                 if (user) {
                     validUser = true;
                     tenantId = user.tenantId;
@@ -40,7 +41,7 @@ let ChatService = ChatService_1 = class ChatService {
                             data: {
                                 text: userMessage,
                                 isBot: false,
-                                userId,
+                                userId: cleanUserId,
                                 tenantId
                             },
                         });
@@ -95,13 +96,13 @@ Mensaje del residente: ${userMessage}`;
             const result = await model.generateContent(prompt);
             const response = await result.response;
             const botText = response.text();
-            if (userId && validUser) {
+            if (cleanUserId && validUser) {
                 try {
                     await this.prisma.message.create({
                         data: {
                             text: botText,
                             isBot: true,
-                            userId,
+                            userId: cleanUserId,
                             tenantId
                         },
                     });

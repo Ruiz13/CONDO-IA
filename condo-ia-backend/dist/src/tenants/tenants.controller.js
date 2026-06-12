@@ -26,6 +26,9 @@ let TenantsController = class TenantsController {
     async getAllTenants() {
         return this.tenantsService.getAllTenants();
     }
+    version() {
+        return { version: 'bcryptjs-v1' };
+    }
     async createTenantWithAdmin(body) {
         return this.tenantsService.createTenantWithAdmin(body);
     }
@@ -86,6 +89,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], TenantsController.prototype, "getAllTenants", null);
+__decorate([
+    (0, common_1.Get)('version'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "version", null);
 __decorate([
     (0, common_1.Post)('create-with-admin'),
     __param(0, (0, common_1.Body)()),

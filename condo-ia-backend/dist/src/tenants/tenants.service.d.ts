@@ -29,7 +29,6 @@ export declare class TenantsService {
     } & {
         id: string;
         name: string;
-        createdAt: Date;
         geminiApiKey: string | null;
         isActive: boolean;
         logoBase64: string | null;
@@ -39,6 +38,7 @@ export declare class TenantsService {
         state: string | null;
         country: string | null;
         phone: string | null;
+        createdAt: Date;
     })[]>;
     deleteTenant(tenantId: string): Promise<{
         success: boolean;
@@ -47,7 +47,6 @@ export declare class TenantsService {
     toggleTenantStatus(tenantId: string): Promise<{
         id: string;
         name: string;
-        createdAt: Date;
         geminiApiKey: string | null;
         isActive: boolean;
         logoBase64: string | null;
@@ -57,6 +56,7 @@ export declare class TenantsService {
         state: string | null;
         country: string | null;
         phone: string | null;
+        createdAt: Date;
     }>;
     updateTenantLogo(tenantId: string, logoBase64: string): Promise<{
         message: string;
@@ -87,8 +87,8 @@ export declare class TenantsService {
     getUnitsByTenant(tenantId: string): Promise<({
         invoices: {
             id: string;
-            tenantId: string;
             createdAt: Date;
+            tenantId: string;
             unitId: string;
             month: number;
             year: number;
@@ -103,20 +103,20 @@ export declare class TenantsService {
     } & {
         id: string;
         tenantId: string;
-        ownerId: string;
         unitNumber: string;
         aliquotPercentage: number;
         isCommercial: boolean;
+        ownerId: string;
     })[]>;
     createUnitAndOwner(tenantId: string, unitNumber: string, ownerEmail: string, ownerPassword: string, aliquotPercentage: number): Promise<{
         success: boolean;
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     }>;
     getTenantStats(tenantId: string): Promise<{
@@ -138,21 +138,21 @@ export declare class TenantsService {
             unit: {
                 id: string;
                 tenantId: string;
-                ownerId: string;
                 unitNumber: string;
                 aliquotPercentage: number;
                 isCommercial: boolean;
+                ownerId: string;
             };
         } & {
             id: string;
-            tenantId: string;
             createdAt: Date;
+            tenantId: string;
             unitId: string;
             status: string;
             amount: number;
-            ocrConfidence: number | null;
             paymentMethod: string;
             referenceNumber: string | null;
+            ocrConfidence: number | null;
             receiptUrl: string | null;
         })[];
         expenses: {
@@ -185,12 +185,12 @@ export declare class TenantsService {
     debugUsers(): Promise<{
         total: number;
         users: {
-            email: string;
-            role: string;
             tenant: {
                 name: string;
                 isActive: boolean;
             } | null;
+            email: string;
+            role: string;
         }[];
     }>;
     reactivateAllTenants(): Promise<{

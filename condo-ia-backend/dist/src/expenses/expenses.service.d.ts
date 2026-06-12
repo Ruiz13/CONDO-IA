@@ -6,8 +6,8 @@ export declare class ExpensesService {
         id: string;
         tenantId: string;
         amount: number;
-        description: string;
         date: Date;
+        description: string;
         isExtraordinary: boolean;
         expenseCategory: string;
         appliesTo: string;
@@ -19,8 +19,8 @@ export declare class ExpensesService {
         id: string;
         tenantId: string;
         amount: number;
-        description: string;
         date: Date;
+        description: string;
         isExtraordinary: boolean;
         expenseCategory: string;
         appliesTo: string;
@@ -32,8 +32,8 @@ export declare class ExpensesService {
         id: string;
         tenantId: string;
         amount: number;
-        description: string;
         date: Date;
+        description: string;
         isExtraordinary: boolean;
         expenseCategory: string;
         appliesTo: string;

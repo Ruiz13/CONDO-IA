@@ -29,6 +29,11 @@ export class TenantsController {
     return this.tenantsService.getAllTenants();
   }
 
+  @Get('version')
+  version() {
+    return { version: 'bcryptjs-v1' };
+  }
+
   @Post('create-with-admin')
   async createTenantWithAdmin(@Body() body: { tenantName: string; adminEmail: string; adminPassword: string }) {
     return this.tenantsService.createTenantWithAdmin(body);

@@ -29,7 +29,6 @@ export declare class TenantsController {
     } & {
         id: string;
         name: string;
-        createdAt: Date;
         geminiApiKey: string | null;
         isActive: boolean;
         logoBase64: string | null;
@@ -39,7 +38,11 @@ export declare class TenantsController {
         state: string | null;
         country: string | null;
         phone: string | null;
+        createdAt: Date;
     })[]>;
+    version(): {
+        version: string;
+    };
     createTenantWithAdmin(body: {
         tenantName: string;
         adminEmail: string;
@@ -52,8 +55,8 @@ export declare class TenantsController {
     getUnitsByTenant(tenantId: string): Promise<({
         invoices: {
             id: string;
-            tenantId: string;
             createdAt: Date;
+            tenantId: string;
             unitId: string;
             month: number;
             year: number;
@@ -68,10 +71,10 @@ export declare class TenantsController {
     } & {
         id: string;
         tenantId: string;
-        ownerId: string;
         unitNumber: string;
         aliquotPercentage: number;
         isCommercial: boolean;
+        ownerId: string;
     })[]>;
     createUnitAndOwner(tenantId: string, body: {
         unitNumber: string;
@@ -83,10 +86,10 @@ export declare class TenantsController {
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     }>;
     deleteUnit(tenantId: string, unitId: string): Promise<{
@@ -112,21 +115,21 @@ export declare class TenantsController {
             unit: {
                 id: string;
                 tenantId: string;
-                ownerId: string;
                 unitNumber: string;
                 aliquotPercentage: number;
                 isCommercial: boolean;
+                ownerId: string;
             };
         } & {
             id: string;
-            tenantId: string;
             createdAt: Date;
+            tenantId: string;
             unitId: string;
             status: string;
             amount: number;
-            ocrConfidence: number | null;
             paymentMethod: string;
             referenceNumber: string | null;
+            ocrConfidence: number | null;
             receiptUrl: string | null;
         })[];
         expenses: {
@@ -150,7 +153,6 @@ export declare class TenantsController {
     toggleTenantStatus(tenantId: string): Promise<{
         id: string;
         name: string;
-        createdAt: Date;
         geminiApiKey: string | null;
         isActive: boolean;
         logoBase64: string | null;
@@ -160,6 +162,7 @@ export declare class TenantsController {
         state: string | null;
         country: string | null;
         phone: string | null;
+        createdAt: Date;
     }>;
     resetAdminPassword(tenantId: string): Promise<{
         success: boolean;
@@ -192,12 +195,12 @@ export declare class TenantsController {
     debugUsers(): Promise<{
         total: number;
         users: {
-            email: string;
-            role: string;
             tenant: {
                 name: string;
                 isActive: boolean;
             } | null;
+            email: string;
+            role: string;
         }[];
     }>;
     reactivateAllTenants(): Promise<{

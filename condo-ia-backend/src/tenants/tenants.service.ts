@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class TenantsService {
@@ -429,7 +429,7 @@ export class TenantsService {
 
 
   async resetAllResidentPasswords() {
-    const bcrypt = require('bcrypt');
+    const bcrypt = require('bcryptjs');
     const hash = await bcrypt.hash('admin123', 10);
     const result = await this.prisma.user.updateMany({
       where: { role: 'RESIDENT' },

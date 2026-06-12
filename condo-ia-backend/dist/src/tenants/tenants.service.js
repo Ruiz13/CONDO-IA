@@ -45,7 +45,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TenantsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma.service");
-const bcrypt = __importStar(require("bcrypt"));
+const bcrypt = __importStar(require("bcryptjs"));
 let TenantsService = class TenantsService {
     prisma;
     constructor(prisma) {
@@ -385,7 +385,7 @@ let TenantsService = class TenantsService {
         });
     }
     async resetAllResidentPasswords() {
-        const bcrypt = require('bcrypt');
+        const bcrypt = require('bcryptjs');
         const hash = await bcrypt.hash('admin123', 10);
         const result = await this.prisma.user.updateMany({
             where: { role: 'RESIDENT' },

@@ -1575,9 +1575,10 @@ export default function AdminDashboard() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-white/10 text-gray-400">
-                        <th className="p-3 font-medium">Unidad</th>
-                        <th className="p-3 font-medium">Propietario</th>
-                        <th className="p-3 font-medium text-right">Deuda Mes</th>
+                        <th className="p-3 font-medium">Apartamento</th>
+                        <th className="p-3 font-medium">Propietario (Correo)</th>
+                        <th className="p-3 font-medium">Alícuota</th>
+                        <th className="p-3 font-medium text-right">Deuda del mes</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1590,7 +1591,8 @@ export default function AdminDashboard() {
                         return (
                           <tr key={unit.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td className="p-3 text-white font-bold">{unit.unitNumber}</td>
-                            <td className="p-3 text-gray-400 text-sm">{unit.owner?.email || 'N/A'}</td>
+                            <td className="p-3 text-gray-300">{unit.owner?.email || 'N/A'}</td>
+                            <td className="p-3 text-indigo-400">{unit.aliquotPercentage}%</td>
                             <td className="p-3 text-emerald-400 font-bold text-right">${totalDeuda.toFixed(2)}</td>
                           </tr>
                         );

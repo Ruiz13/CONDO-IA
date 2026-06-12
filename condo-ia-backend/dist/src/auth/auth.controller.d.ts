@@ -14,6 +14,10 @@ export declare class AuthController {
             mustChangePassword: boolean;
             avatarBase64: string | null;
         };
+    } | {
+        debugError: boolean;
+        message: any;
+        stack: any;
     }>;
     changePassword(body: any): Promise<{
         success: boolean;

@@ -6,8 +6,16 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
-  login(@Body() body: any) {
-    return this.authService.login(body.email, body.password);
+  async login(@Body() body: any) {
+    try {
+      return await this.authService.login(body.email, body.password);
+    } catch (err: any) {
+      return {
+        debugError: true,
+        message: err.message,
+        stack: err.stack
+      };
+    }
   }
 
   @Post('change-password')

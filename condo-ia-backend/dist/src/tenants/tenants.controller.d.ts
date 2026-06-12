@@ -167,6 +167,10 @@ export declare class TenantsController {
     resetAdminPassword(tenantId: string): Promise<{
         success: boolean;
         message: string;
+    } | {
+        debugError: boolean;
+        message: any;
+        stack: any;
     }>;
     updateTenantLogo(tenantId: string, body: {
         logoBase64: string;

@@ -20,8 +20,17 @@ let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    login(body) {
-        return this.authService.login(body.email, body.password);
+    async login(body) {
+        try {
+            return await this.authService.login(body.email, body.password);
+        }
+        catch (err) {
+            return {
+                debugError: true,
+                message: err.message,
+                stack: err.stack
+            };
+        }
     }
     changePassword(body) {
         return this.authService.changePassword(body.userId, body.newPassword);
@@ -42,7 +51,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Post)('change-password'),

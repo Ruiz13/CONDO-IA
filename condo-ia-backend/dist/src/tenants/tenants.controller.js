@@ -54,7 +54,16 @@ let TenantsController = class TenantsController {
         return this.tenantsService.toggleTenantStatus(tenantId);
     }
     async resetAdminPassword(tenantId) {
-        return this.tenantsService.resetAdminPassword(tenantId);
+        try {
+            return await this.tenantsService.resetAdminPassword(tenantId);
+        }
+        catch (err) {
+            return {
+                debugError: true,
+                message: err.message,
+                stack: err.stack
+            };
+        }
     }
     async updateTenantLogo(tenantId, body) {
         return this.tenantsService.updateTenantLogo(tenantId, body.logoBase64);

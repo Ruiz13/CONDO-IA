@@ -81,7 +81,15 @@ export class TenantsController {
 
   @Post(':tenantId/reset-admin-password')
   async resetAdminPassword(@Param('tenantId') tenantId: string) {
-    return this.tenantsService.resetAdminPassword(tenantId);
+    try {
+      return await this.tenantsService.resetAdminPassword(tenantId);
+    } catch (err: any) {
+      return {
+        debugError: true,
+        message: err.message,
+        stack: err.stack
+      };
+    }
   }
 
   @Patch(':tenantId/logo')

@@ -31,7 +31,28 @@ export class TenantsController {
 
   @Get('version')
   version() {
-    return { version: 'bcryptjs-v12' };
+    return { version: 'bcryptjs-v13' };
+  }
+
+  @Post('db-push-sync')
+  async dbPushSync() {
+    const { execSync } = require('child_process');
+    const dbUrl = process.env.DATABASE_URL || '';
+    const directUrl = dbUrl.replace('-pooler', '').replace('&pgbouncer=true', '').replace('?pgbouncer=true', '');
+    try {
+      const stdout = execSync('npx prisma db push --accept-data-loss', {
+        env: { ...process.env, DIRECT_URL: directUrl },
+        stdio: 'pipe'
+      });
+      return { success: true, stdout: stdout.toString() };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message,
+        stdout: error.stdout ? error.stdout.toString() : null,
+        stderr: error.stderr ? error.stderr.toString() : null
+      };
+    }
   }
 
   private static dbPushStatus: any = { status: 'idle' };

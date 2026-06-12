@@ -71,3 +71,14 @@ El ecosistema de Condo IA está compuesto por tres pilares fundamentales:
 - Eliminado módulo de Contestadora WhatsApp Bot (backend y frontend). La funcionalidad no estaba lista para producción y causaba inestabilidad en el servidor.
 - Limpieza de scripts temporales de diagnóstico.
 - Reparación de este archivo de bitácora (sección corrupta por bytes nulos).
+
+### 2026-06-12: Limpieza de Código Basura, Conciliación Bancaria e Historial IA
+- **Limpieza Completa (App Móvil y Backend):**
+  - Eliminados 26 archivos del template de Expo (explore.tsx, reportar-pago.tsx, etc.) y carpetas obsoletas (`dist`, `theme`, `hooks`, `components/ui`).
+  - Remoción de todas las cabeceras de bypass de túneles locales `"Bypass-Tunnel-Reminder"` en las consultas HTTP de la aplicación móvil y depuración de [api.ts](file:///c:/Users/matar/Downloads/CONDO-IA/condo-ia-mobile/src/constants/api.ts).
+  - Eliminación de scripts de prueba locales como [test-prisma.js](file:///c:/Users/matar/Downloads/CONDO-IA/condo-ia-backend/test-prisma.js).
+- **Módulo de Conciliación Bancaria:**
+  - **Backend:** Creado [reconciliation.controller.ts](file:///c:/Users/matar/Downloads/CONDO-IA/condo-ia-backend/src/payments/reconciliation.controller.ts) con endpoints para parsear PDFs bancarios (usando `pdf-parse` y Gemini 2.5 Flash para estructurar transacciones) y procesar cruces de pagos. Actualizado [payments.service.ts](file:///c:/Users/matar/Downloads/CONDO-IA/condo-ia-backend/src/payments/payments.service.ts) para auto-aprobar pagos que coinciden exactamente en referencia y monto.
+  - **Frontend (Admin Web):** Nueva sección de **"Conciliación"** en la barra lateral con subida de archivos Drag & Drop, lectura de archivos Excel (`xlsx` local) y PDF (vía backend), vista previa de filas detectadas, ejecución de cruce y visualización de resultados clasificados (Conciliados, No reportados, Reportados sin banco).
+- **Control Rodante de Auditoría de IA:**
+  - Configurado un borrado automático de registros de chat de IA y auditorías de más de 7 días. Se ejecuta en tiempo real al solicitar los datos y de forma programada mediante un Cron diario (`@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)`). Esto mantiene el gráfico "Uso de la IA" mostrando únicamente la ventana móvil de los últimos 7 días.

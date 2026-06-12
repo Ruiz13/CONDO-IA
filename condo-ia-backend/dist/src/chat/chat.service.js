@@ -14,6 +14,7 @@ exports.ChatService = void 0;
 const common_1 = require("@nestjs/common");
 const generative_ai_1 = require("@google/generative-ai");
 const prisma_service_1 = require("../prisma.service");
+const schedule_1 = require("@nestjs/schedule");
 const knowledge_service_1 = require("../knowledge/knowledge.service");
 let ChatService = ChatService_1 = class ChatService {
     prisma;
@@ -127,20 +128,45 @@ Mensaje del residente: ${userMessage}`;
         }
     }
     async getChatHistory(userId) {
+        await this.cleanupOldMessages();
         return this.prisma.message.findMany({
             where: { userId },
             orderBy: { createdAt: 'asc' },
         });
     }
     async getAuditHistory(tenantId) {
+        await this.cleanupOldMessages();
         return this.prisma.message.findMany({
             where: { tenantId },
             include: { user: { select: { email: true } } },
             orderBy: { createdAt: 'desc' },
         });
     }
+    async cleanupOldMessages() {
+        try {
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const deleteResult = await this.prisma.message.deleteMany({
+                where: {
+                    createdAt: { lt: sevenDaysAgo }
+                }
+            });
+            if (deleteResult.count > 0) {
+                this.logger.log(`Limpieza automática: se eliminaron ${deleteResult.count} mensajes de IA antiguos (más de 7 días).`);
+            }
+        }
+        catch (e) {
+            this.logger.error('Error durante la limpieza automática de mensajes de IA', e);
+        }
+    }
 };
 exports.ChatService = ChatService;
+__decorate([
+    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_DAY_AT_MIDNIGHT),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ChatService.prototype, "cleanupOldMessages", null);
 exports.ChatService = ChatService = ChatService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService, knowledge_service_1.KnowledgeService])

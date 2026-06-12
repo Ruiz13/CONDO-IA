@@ -315,6 +315,14 @@ let TenantsService = class TenantsService {
         ];
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(now.getDate() - 7);
+        try {
+            await this.prisma.message.deleteMany({
+                where: { createdAt: { lt: sevenDaysAgo } }
+            });
+        }
+        catch (e) {
+            console.error('Error al limpiar mensajes antiguos en getStats:', e);
+        }
         const recentMessages = await this.prisma.message.findMany({
             where: { tenantId, isBot: false, createdAt: { gte: sevenDaysAgo } },
             select: { createdAt: true }

@@ -9,11 +9,11 @@ export declare class ChatService {
     getAiResponse(userMessage: string, userId?: string): Promise<string>;
     getChatHistory(userId: string): Promise<{
         id: string;
-        createdAt: Date;
         tenantId: string | null;
+        userId: string | null;
         text: string;
         isBot: boolean;
-        userId: string | null;
+        createdAt: Date;
     }[]>;
     getAuditHistory(tenantId: string): Promise<({
         user: {
@@ -21,10 +21,11 @@ export declare class ChatService {
         } | null;
     } & {
         id: string;
-        createdAt: Date;
         tenantId: string | null;
+        userId: string | null;
         text: string;
         isBot: boolean;
-        userId: string | null;
+        createdAt: Date;
     })[]>;
+    cleanupOldMessages(): Promise<void>;
 }

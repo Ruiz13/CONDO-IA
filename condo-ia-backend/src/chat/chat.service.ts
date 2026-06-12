@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../prisma.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { KnowledgeService } from '../knowledge/knowledge.service';
 
@@ -129,6 +130,7 @@ Mensaje del residente: ${userMessage}`;
   }
 
   async getChatHistory(userId: string) {
+    await this.cleanupOldMessages();
     return this.prisma.message.findMany({
       where: { userId },
       orderBy: { createdAt: 'asc' },
@@ -136,10 +138,29 @@ Mensaje del residente: ${userMessage}`;
   }
 
   async getAuditHistory(tenantId: string) {
+    await this.cleanupOldMessages();
     return this.prisma.message.findMany({
       where: { tenantId },
       include: { user: { select: { email: true } } },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async cleanupOldMessages() {
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const deleteResult = await this.prisma.message.deleteMany({
+        where: {
+          createdAt: { lt: sevenDaysAgo }
+        }
+      });
+      if (deleteResult.count > 0) {
+        this.logger.log(`Limpieza automática: se eliminaron ${deleteResult.count} mensajes de IA antiguos (más de 7 días).`);
+      }
+    } catch (e) {
+      this.logger.error('Error durante la limpieza automática de mensajes de IA', e);
+    }
   }
 }

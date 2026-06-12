@@ -339,9 +339,18 @@ export class TenantsService {
       { name: 'Morosos', value: pendientes }
     ];
 
-    // Consultas IA en los últimos 7 días
+    // Consultas IA en los últimos 7 días (y limpiar registros mayores a 7 días)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(now.getDate() - 7);
+    
+    try {
+      await this.prisma.message.deleteMany({
+        where: { createdAt: { lt: sevenDaysAgo } }
+      });
+    } catch (e) {
+      console.error('Error al limpiar mensajes antiguos en getStats:', e);
+    }
+
     const recentMessages = await this.prisma.message.findMany({
       where: { tenantId, isBot: false, createdAt: { gte: sevenDaysAgo } },
       select: { createdAt: true }

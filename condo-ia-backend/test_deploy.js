@@ -2,17 +2,15 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function poll() {
   const url = 'https://condo-ia-backend.onrender.com/api/tenants/version';
-  console.log("Starting polling for version bcryptjs-v12...");
-  for (let i = 0; i < 45; i++) {
+  console.log("Starting polling for version bcryptjs-v13...");
+  for (let i = 0; i < 40; i++) {
     try {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         console.log(`[Attempt ${i+1}] Version:`, data.version);
-        if (data.version === 'bcryptjs-v12') {
-          console.log("NEW DEPLOY (bcryptjs-v12) SUCCESSFUL AND ACTIVE!");
-          console.log("Waiting 15 seconds for background db-push to complete...");
-          await sleep(15000);
+        if (data.version === 'bcryptjs-v13') {
+          console.log("NEW DEPLOY (bcryptjs-v13) SUCCESSFUL AND ACTIVE!");
           await runFlow();
           return;
         }
@@ -29,6 +27,12 @@ async function poll() {
 
 async function runFlow() {
   try {
+    // 1. Trigger DB Push Sync
+    console.log("\nTriggering db-push-sync...");
+    const pushRes = await fetch('https://condo-ia-backend.onrender.com/api/tenants/db-push-sync', { method: 'POST' });
+    const pushResult = await pushRes.json();
+    console.log("DB Push Sync Result:", JSON.stringify(pushResult, null, 2));
+
     // Get tenants
     const tenantsRes = await fetch('https://condo-ia-backend.onrender.com/api/tenants');
     const tenants = await tenantsRes.json();

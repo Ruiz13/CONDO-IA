@@ -7,15 +7,7 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() body: any) {
-    try {
-      return await this.authService.login(body.email, body.password);
-    } catch (err: any) {
-      return {
-        debugError: true,
-        message: err.message,
-        stack: err.stack
-      };
-    }
+    return await this.authService.login(body.email, body.password);
   }
 
   @Post('change-password')

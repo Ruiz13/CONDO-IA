@@ -39,11 +39,10 @@ export default function AdminDashboard() {
   const [newDocTitle, setNewDocTitle] = useState('');
   const [newDocText, setNewDocText] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
   const [editingResident, setEditingResident] = useState<any | null>(null);
   const [editResName, setEditResName] = useState('');
   const [editResEmail, setEditResEmail] = useState('');
-
-  const [loading, setLoading] = useState(true);
 
   const [units, setUnits] = useState<any[]>([]);
   const [resetUnitEmail, setResetUnitEmail] = useState('');

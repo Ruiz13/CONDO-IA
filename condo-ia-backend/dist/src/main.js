@@ -37,24 +37,27 @@ const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const express = __importStar(require("express"));
 const dotenv = __importStar(require("dotenv"));
-const child_process_1 = require("child_process");
 dotenv.config();
 try {
-    console.log('[STARTUP] Iniciando prisma db push...');
+    console.log('[STARTUP] Iniciando prisma db push en segundo plano...');
     const dbUrl = process.env.DATABASE_URL || '';
     const directUrl = dbUrl.replace('-pooler', '').replace('&pgbouncer=true', '').replace('?pgbouncer=true', '');
-    const stdout = (0, child_process_1.execSync)('npx prisma db push --accept-data-loss', {
-        env: { ...process.env, DIRECT_URL: directUrl },
-        stdio: 'pipe'
+    exec('npx prisma db push --accept-data-loss', {
+        env: { ...process.env, DIRECT_URL: directUrl }
+    }, (error, stdout, stderr) => {
+        if (error) {
+            console.error('[STARTUP] Error en prisma db push:', error.message);
+            console.error('[STARTUP] stderr:', stderr);
+            console.log('[STARTUP] stdout:', stdout);
+        }
+        else {
+            console.log('[STARTUP] Prisma db push completado con éxito.');
+            console.log('[STARTUP] stdout:', stdout);
+        }
     });
-    console.log('[STARTUP] Prisma db push completado con éxito:', stdout.toString());
 }
-catch (error) {
-    console.error('[STARTUP] Error en prisma db push:', error.message);
-    if (error.stdout)
-        console.log('[STARTUP] stdout:', error.stdout.toString());
-    if (error.stderr)
-        console.error('[STARTUP] stderr:', error.stderr.toString());
+catch (err) {
+    console.error('[STARTUP] Error al iniciar subprocess de db push:', err.message);
 }
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);

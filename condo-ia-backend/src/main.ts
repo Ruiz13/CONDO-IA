@@ -6,20 +6,25 @@ import { execSync } from 'child_process';
 
 dotenv.config();
 
-// Ejecutar prisma db push al arrancar para asegurar que la base de datos de producción esté actualizada
+// Ejecutar prisma db push al arrancar para asegurar que la base de datos de producción esté actualizada (en segundo plano)
 try {
-  console.log('[STARTUP] Iniciando prisma db push...');
+  console.log('[STARTUP] Iniciando prisma db push en segundo plano...');
   const dbUrl = process.env.DATABASE_URL || '';
   const directUrl = dbUrl.replace('-pooler', '').replace('&pgbouncer=true', '').replace('?pgbouncer=true', '');
-  const stdout = execSync('npx prisma db push --accept-data-loss', {
-    env: { ...process.env, DIRECT_URL: directUrl },
-    stdio: 'pipe'
+  exec('npx prisma db push --accept-data-loss', {
+    env: { ...process.env, DIRECT_URL: directUrl }
+  }, (error: any, stdout: any, stderr: any) => {
+    if (error) {
+      console.error('[STARTUP] Error en prisma db push:', error.message);
+      console.error('[STARTUP] stderr:', stderr);
+      console.log('[STARTUP] stdout:', stdout);
+    } else {
+      console.log('[STARTUP] Prisma db push completado con éxito.');
+      console.log('[STARTUP] stdout:', stdout);
+    }
   });
-  console.log('[STARTUP] Prisma db push completado con éxito:', stdout.toString());
-} catch (error: any) {
-  console.error('[STARTUP] Error en prisma db push:', error.message);
-  if (error.stdout) console.log('[STARTUP] stdout:', error.stdout.toString());
-  if (error.stderr) console.error('[STARTUP] stderr:', error.stderr.toString());
+} catch (err: any) {
+  console.error('[STARTUP] Error al iniciar subprocess de db push:', err.message);
 }
 
 async function bootstrap() {

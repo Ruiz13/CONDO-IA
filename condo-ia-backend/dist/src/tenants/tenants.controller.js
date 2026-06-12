@@ -11,11 +11,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var TenantsController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TenantsController = void 0;
 const common_1 = require("@nestjs/common");
 const tenants_service_1 = require("./tenants.service");
 let TenantsController = class TenantsController {
+    static { TenantsController_1 = this; }
     tenantsService;
     constructor(tenantsService) {
         this.tenantsService = tenantsService;
@@ -27,19 +29,38 @@ let TenantsController = class TenantsController {
         return this.tenantsService.getAllTenants();
     }
     version() {
-        return { version: 'bcryptjs-v4' };
+        return { version: 'bcryptjs-v5' };
     }
+    static dbPushStatus = { status: 'idle' };
     async dbPush() {
+        if (TenantsController_1.dbPushStatus.status === 'running') {
+            return { message: 'Already running', status: TenantsController_1.dbPushStatus };
+        }
+        TenantsController_1.dbPushStatus = { status: 'running', startTime: new Date() };
         const { exec } = require('child_process');
-        return new Promise((resolve) => {
-            exec('DIRECT_URL="$DATABASE_URL" npx prisma db push', (error, stdout, stderr) => {
-                resolve({
-                    error: error ? error.message : null,
+        exec('DIRECT_URL="$DATABASE_URL" npx prisma db push', (error, stdout, stderr) => {
+            if (error) {
+                TenantsController_1.dbPushStatus = {
+                    status: 'error',
+                    error: error.message,
                     stdout,
-                    stderr
-                });
-            });
+                    stderr,
+                    endTime: new Date()
+                };
+            }
+            else {
+                TenantsController_1.dbPushStatus = {
+                    status: 'success',
+                    stdout,
+                    stderr,
+                    endTime: new Date()
+                };
+            }
         });
+        return { message: 'Database push started in background', status: TenantsController_1.dbPushStatus };
+    }
+    getDbPushStatus() {
+        return TenantsController_1.dbPushStatus;
     }
     async createTenantWithAdmin(body) {
         return this.tenantsService.createTenantWithAdmin(body);
@@ -122,6 +143,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], TenantsController.prototype, "dbPush", null);
+__decorate([
+    (0, common_1.Get)('db-push-status'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "getDbPushStatus", null);
 __decorate([
     (0, common_1.Post)('create-with-admin'),
     __param(0, (0, common_1.Body)()),
@@ -228,7 +255,7 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], TenantsController.prototype, "reactivateAllTenants", null);
-exports.TenantsController = TenantsController = __decorate([
+exports.TenantsController = TenantsController = TenantsController_1 = __decorate([
     (0, common_1.Controller)('api/tenants'),
     __metadata("design:paramtypes", [tenants_service_1.TenantsService])
 ], TenantsController);

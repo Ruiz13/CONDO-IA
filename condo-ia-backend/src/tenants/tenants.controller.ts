@@ -31,21 +31,45 @@ export class TenantsController {
 
   @Get('version')
   version() {
-    return { version: 'bcryptjs-v4' };
+    return { version: 'bcryptjs-v5' };
   }
+
+  private static dbPushStatus: any = { status: 'idle' };
 
   @Post('db-push')
   async dbPush() {
+    if (TenantsController.dbPushStatus.status === 'running') {
+      return { message: 'Already running', status: TenantsController.dbPushStatus };
+    }
+
+    TenantsController.dbPushStatus = { status: 'running', startTime: new Date() };
+
     const { exec } = require('child_process');
-    return new Promise((resolve) => {
-      exec('DIRECT_URL="$DATABASE_URL" npx prisma db push', (error, stdout, stderr) => {
-        resolve({
-          error: error ? error.message : null,
+    exec('DIRECT_URL="$DATABASE_URL" npx prisma db push', (error: any, stdout: any, stderr: any) => {
+      if (error) {
+        TenantsController.dbPushStatus = {
+          status: 'error',
+          error: error.message,
           stdout,
-          stderr
-        });
-      });
+          stderr,
+          endTime: new Date()
+        };
+      } else {
+        TenantsController.dbPushStatus = {
+          status: 'success',
+          stdout,
+          stderr,
+          endTime: new Date()
+        };
+      }
     });
+
+    return { message: 'Database push started in background', status: TenantsController.dbPushStatus };
+  }
+
+  @Get('db-push-status')
+  getDbPushStatus() {
+    return TenantsController.dbPushStatus;
   }
 
   @Post('create-with-admin')

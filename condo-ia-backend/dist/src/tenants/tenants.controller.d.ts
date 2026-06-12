@@ -43,7 +43,12 @@ export declare class TenantsController {
     version(): {
         version: string;
     };
-    dbPush(): Promise<unknown>;
+    private static dbPushStatus;
+    dbPush(): Promise<{
+        message: string;
+        status: any;
+    }>;
+    getDbPushStatus(): any;
     createTenantWithAdmin(body: {
         tenantName: string;
         adminEmail: string;

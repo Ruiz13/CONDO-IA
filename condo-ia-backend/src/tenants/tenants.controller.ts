@@ -31,7 +31,7 @@ export class TenantsController {
 
   @Get('version')
   version() {
-    return { version: 'bcryptjs-v1' };
+    return { version: 'bcryptjs-v2' };
   }
 
   @Post('create-with-admin')

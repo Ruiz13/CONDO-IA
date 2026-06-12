@@ -27,7 +27,7 @@ let TenantsController = class TenantsController {
         return this.tenantsService.getAllTenants();
     }
     version() {
-        return { version: 'bcryptjs-v1' };
+        return { version: 'bcryptjs-v2' };
     }
     async createTenantWithAdmin(body) {
         return this.tenantsService.createTenantWithAdmin(body);

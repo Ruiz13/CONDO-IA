@@ -48,6 +48,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role,
         tenantId: user.tenantId,
         tenantName: user.tenant?.name || 'Mi Edificio',
@@ -69,7 +70,7 @@ export class AuthService {
     return { success: true, message: 'Contraseña actualizada correctamente' };
   }
 
-  async updateProfile(userId: string, newEmail?: string, newPassword?: string) {
+  async updateProfile(userId: string, newEmail?: string, newPassword?: string, newName?: string) {
     const data: any = {};
     if (newEmail) {
       // Verificar si el correo ya existe
@@ -83,6 +84,9 @@ export class AuthService {
       data.passwordHash = await bcrypt.hash(newPassword, 10);
       data.mustChangePassword = false;
     }
+    if (newName !== undefined) {
+      data.name = newName;
+    }
     
     const user = await this.prisma.user.update({
       where: { id: userId },
@@ -94,6 +98,7 @@ export class AuthService {
       user: {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role,
         tenantId: user.tenantId,
         mustChangePassword: user.mustChangePassword,

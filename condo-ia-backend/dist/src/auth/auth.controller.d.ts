@@ -7,6 +7,7 @@ export declare class AuthController {
         user: {
             id: string;
             email: string;
+            name: string | null;
             role: string;
             tenantId: string | null;
             tenantName: string;
@@ -29,11 +30,13 @@ export declare class AuthController {
         userId: string;
         newEmail?: string;
         newPassword?: string;
+        newName?: string;
     }): Promise<{
         success: boolean;
         user: {
             id: string;
             email: string;
+            name: string | null;
             role: string;
             tenantId: string | null;
             mustChangePassword: boolean;

@@ -82,6 +82,7 @@ let AuthService = AuthService_1 = class AuthService {
             user: {
                 id: user.id,
                 email: user.email,
+                name: user.name,
                 role: user.role,
                 tenantId: user.tenantId,
                 tenantName: user.tenant?.name || 'Mi Edificio',
@@ -101,7 +102,7 @@ let AuthService = AuthService_1 = class AuthService {
         });
         return { success: true, message: 'Contraseña actualizada correctamente' };
     }
-    async updateProfile(userId, newEmail, newPassword) {
+    async updateProfile(userId, newEmail, newPassword, newName) {
         const data = {};
         if (newEmail) {
             const existing = await this.prisma.user.findUnique({ where: { email: newEmail } });
@@ -114,6 +115,9 @@ let AuthService = AuthService_1 = class AuthService {
             data.passwordHash = await bcrypt.hash(newPassword, 10);
             data.mustChangePassword = false;
         }
+        if (newName !== undefined) {
+            data.name = newName;
+        }
         const user = await this.prisma.user.update({
             where: { id: userId },
             data
@@ -123,6 +127,7 @@ let AuthService = AuthService_1 = class AuthService {
             user: {
                 id: user.id,
                 email: user.email,
+                name: user.name,
                 role: user.role,
                 tenantId: user.tenantId,
                 mustChangePassword: user.mustChangePassword,

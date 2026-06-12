@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   StyleSheet, Text, View, TouchableOpacity,
-  SafeAreaView, Image, ActivityIndicator, Alert, ScrollView
+  SafeAreaView, Image, ActivityIndicator, Alert, ScrollView, TextInput
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +21,37 @@ const ROLE_LABELS: Record<string, string> = {
 export default function ProfileScreen() {
   const { user, logout, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(user?.name || '');
+
+  const handleSaveName = async () => {
+    if (!nameInput.trim()) {
+      Alert.alert('Error', 'El nombre no puede estar vacío.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await fetch(API_URL('/api/auth/update-profile'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user?.id, newName: nameInput }),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        updateUser({ name: nameInput });
+        setIsEditingName(false);
+        Alert.alert('✅ Éxito', 'Nombre de propietario actualizado.');
+      } else {
+        Alert.alert('Error', data.message || 'No se pudo actualizar el nombre.');
+      }
+    } catch {
+      Alert.alert('Error', 'Problema de conexión con el servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const roleLabel = ROLE_LABELS[user?.role ?? ''] ?? 'Propietario';
 
@@ -143,6 +174,50 @@ export default function ProfileScreen() {
             <View style={styles.infoText}>
               <Text style={styles.infoLabel}>Rol</Text>
               <Text style={styles.infoValue}>{roleLabel}</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          {/* Nombre */}
+          <View style={styles.infoRow}>
+            <View style={styles.infoIconBox}>
+              <Ionicons name="person" size={20} color="#a855f7" />
+            </View>
+            <View style={styles.infoText}>
+              <Text style={styles.infoLabel}>Nombre Completo</Text>
+              {!isEditingName ? (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flex: 1, paddingRight: 10 }}>
+                  <Text style={styles.infoValue}>{user?.name || 'Completar nombre...'}</Text>
+                  <TouchableOpacity onPress={() => { setNameInput(user?.name || ''); setIsEditingName(true); }}>
+                    <Ionicons name="create-outline" size={18} color="#c084fc" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, paddingRight: 10 }}>
+                  <TextInput
+                    value={nameInput}
+                    onChangeText={setNameInput}
+                    placeholder="Tu nombre..."
+                    placeholderTextColor="#64748b"
+                    style={{
+                      flex: 1,
+                      color: '#ffffff',
+                      fontSize: 15,
+                      borderBottomWidth: 1,
+                      borderBottomColor: '#c084fc',
+                      paddingVertical: 2
+                    }}
+                    autoFocus
+                  />
+                  <TouchableOpacity onPress={handleSaveName} disabled={loading} style={{ padding: 4 }}>
+                    <Ionicons name="checkmark-circle" size={22} color="#10b981" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setIsEditingName(false)} style={{ padding: 4 }}>
+                    <Ionicons name="close-circle" size={22} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </View>
 

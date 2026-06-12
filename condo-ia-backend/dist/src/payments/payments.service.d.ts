@@ -10,54 +10,55 @@ export declare class PaymentsService {
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     } & {
         id: string;
+        createdAt: Date;
         tenantId: string;
         unitId: string;
+        status: string;
         amount: number;
         paymentMethod: string;
         referenceNumber: string | null;
-        status: string;
         ocrConfidence: number | null;
         receiptUrl: string | null;
-        createdAt: Date;
     })[]>;
     approvePayment(id: string, adminId?: string): Promise<({
         unit: {
             owner: {
                 id: string;
-                tenantId: string | null;
+                name: string | null;
                 createdAt: Date;
                 email: string;
                 passwordHash: string;
                 role: string;
                 mustChangePassword: boolean;
                 avatarBase64: string | null;
+                tenantId: string | null;
             };
         } & {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     } & {
         id: string;
+        createdAt: Date;
         tenantId: string;
         unitId: string;
+        status: string;
         amount: number;
         paymentMethod: string;
         referenceNumber: string | null;
-        status: string;
         ocrConfidence: number | null;
         receiptUrl: string | null;
-        createdAt: Date;
     }) | null>;
     extractOcrData(base64Image: string): Promise<any>;
     reportPayment(data: {
@@ -68,36 +69,36 @@ export declare class PaymentsService {
         receiptBase64?: string;
     }): Promise<{
         id: string;
+        createdAt: Date;
         tenantId: string;
         unitId: string;
+        status: string;
         amount: number;
         paymentMethod: string;
         referenceNumber: string | null;
-        status: string;
         ocrConfidence: number | null;
         receiptUrl: string | null;
-        createdAt: Date;
     }>;
     getUserPayments(userId: string): Promise<({
         unit: {
             id: string;
             tenantId: string;
-            ownerId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     } & {
         id: string;
+        createdAt: Date;
         tenantId: string;
         unitId: string;
+        status: string;
         amount: number;
         paymentMethod: string;
         referenceNumber: string | null;
-        status: string;
         ocrConfidence: number | null;
         receiptUrl: string | null;
-        createdAt: Date;
     })[]>;
     reconcileTransactions(bankTransactions: Array<{
         date?: string;
@@ -117,22 +118,22 @@ export declare class PaymentsService {
             unit: {
                 id: string;
                 tenantId: string;
-                ownerId: string;
                 unitNumber: string;
                 aliquotPercentage: number;
                 isCommercial: boolean;
+                ownerId: string;
             };
         } & {
             id: string;
+            createdAt: Date;
             tenantId: string;
             unitId: string;
+            status: string;
             amount: number;
             paymentMethod: string;
             referenceNumber: string | null;
-            status: string;
             ocrConfidence: number | null;
             receiptUrl: string | null;
-            createdAt: Date;
         })[];
     }>;
 }

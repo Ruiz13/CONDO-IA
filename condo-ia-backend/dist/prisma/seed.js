@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
+const nombres = ['Carlos', 'Ana', 'Luis', 'María', 'José', 'Laura', 'Pedro', 'Diana', 'Jorge', 'Elena', 'Francisco', 'Gabriela', 'Miguel', 'Sofía', 'David', 'Andrea', 'Manuel', 'Patricia', 'Alejandro', 'Carmen'];
+const apellidos = ['Mendoza', 'Gómez', 'Rodríguez', 'Pérez', 'Martínez', 'Hernández', 'González', 'López', 'Sánchez', 'Torres', 'Ramírez', 'Flores', 'Díaz', 'Vásquez', 'Castillo', 'Ruiz', 'Alvarez', 'Jiménez'];
 async function main() {
     console.log('Iniciando la siembra (seed) de la base de datos...');
     const tenant = await prisma.tenant.create({
@@ -15,6 +17,7 @@ async function main() {
         data: {
             tenantId: tenant.id,
             email: 'admin@condoia.com',
+            name: 'Administrador Condo IA',
             passwordHash: defaultPassword,
             role: 'ADMIN',
         },
@@ -25,10 +28,12 @@ async function main() {
         for (let apt = 1; apt <= 4; apt++) {
             const unitNumber = `${piso}-${apt}`;
             const ownerEmail = `propietario_${unitNumber}@condoia.com`;
+            const ownerName = `${nombres[(piso + apt) % nombres.length]} ${apellidos[(piso * apt) % apellidos.length]}`;
             const owner = await prisma.user.create({
                 data: {
                     tenantId: tenant.id,
                     email: ownerEmail,
+                    name: ownerName,
                     passwordHash: defaultPassword,
                     role: 'OWNER',
                 },
@@ -50,10 +55,12 @@ async function main() {
     for (let local = 1; local <= 7; local++) {
         const unitNumber = `Local ${local}`;
         const ownerEmail = `propietario_local_${local}@condoia.com`;
+        const ownerName = `${nombres[local % nombres.length]} ${apellidos[local % apellidos.length]} (Comercio)`;
         const owner = await prisma.user.create({
             data: {
                 tenantId: tenant.id,
                 email: ownerEmail,
+                name: ownerName,
                 passwordHash: defaultPassword,
                 role: 'OWNER',
             },

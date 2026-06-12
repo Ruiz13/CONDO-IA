@@ -1359,9 +1359,9 @@ export default function AdminDashboard() {
                       {units
                         .filter(unit => unit.unitNumber.toLowerCase().includes(searchTermResidentes.toLowerCase()) || unit.owner?.email?.toLowerCase().includes(searchTermResidentes.toLowerCase()))
                         .map((unit: any) => {
-                        const ownerName = unit.owner?.email 
+                        const ownerName = unit.owner?.name || (unit.owner?.email 
                           ? unit.owner.email.split('@')[0].replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) 
-                          : 'N/A';
+                          : 'N/A');
                         return (
                           <tr key={unit.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td className="p-3 font-bold text-white">{unit.unitNumber}</td>
@@ -1583,7 +1583,7 @@ export default function AdminDashboard() {
                     <thead>
                       <tr className="border-b border-white/10 text-gray-400">
                         <th className="p-3 font-medium">Apartamento</th>
-                        <th className="p-3 font-medium">Propietario (Correo)</th>
+                        <th className="p-3 font-medium">Propietario</th>
                         <th className="p-3 font-medium">Alícuota</th>
                         <th className="p-3 font-medium text-right">Deuda del mes</th>
                       </tr>
@@ -1595,10 +1595,13 @@ export default function AdminDashboard() {
                         const totalDeuda = (unit.invoices || [])
                           .filter((i: any) => i.status === 'PENDING' || i.status === 'PARTIAL')
                           .reduce((acc: number, curr: any) => acc + (curr.totalAmount - curr.amountPaid), 0);
+                        const ownerName = unit.owner?.name || (unit.owner?.email 
+                          ? unit.owner.email.split('@')[0].replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) 
+                          : 'N/A');
                         return (
                           <tr key={unit.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                             <td className="p-3 text-white font-bold">{unit.unitNumber}</td>
-                            <td className="p-3 text-gray-300">{unit.owner?.email || 'N/A'}</td>
+                            <td className="p-3 text-white">{ownerName}</td>
                             <td className="p-3 text-indigo-400">{unit.aliquotPercentage}%</td>
                             <td className="p-3 text-emerald-400 font-bold text-right">${totalDeuda.toFixed(2)}</td>
                           </tr>

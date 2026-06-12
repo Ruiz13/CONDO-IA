@@ -10,6 +10,7 @@ export declare class AuthService {
         user: {
             id: string;
             email: string;
+            name: string | null;
             role: string;
             tenantId: string | null;
             tenantName: string;
@@ -21,11 +22,12 @@ export declare class AuthService {
         success: boolean;
         message: string;
     }>;
-    updateProfile(userId: string, newEmail?: string, newPassword?: string): Promise<{
+    updateProfile(userId: string, newEmail?: string, newPassword?: string, newName?: string): Promise<{
         success: boolean;
         user: {
             id: string;
             email: string;
+            name: string | null;
             role: string;
             tenantId: string | null;
             mustChangePassword: boolean;

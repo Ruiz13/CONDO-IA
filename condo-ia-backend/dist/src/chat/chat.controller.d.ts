@@ -7,11 +7,11 @@ export declare class ChatController {
     }>;
     getHistory(userId: string): Promise<{
         id: string;
+        createdAt: Date;
         tenantId: string | null;
-        userId: string | null;
         text: string;
         isBot: boolean;
-        createdAt: Date;
+        userId: string | null;
     }[]>;
     getAuditHistory(tenantId: string): Promise<({
         user: {
@@ -19,10 +19,10 @@ export declare class ChatController {
         } | null;
     } & {
         id: string;
+        createdAt: Date;
         tenantId: string | null;
-        userId: string | null;
         text: string;
         isBot: boolean;
-        createdAt: Date;
+        userId: string | null;
     })[]>;
 }

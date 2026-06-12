@@ -14,8 +14,8 @@ export declare class ExpensesController {
         id: string;
         tenantId: string;
         amount: number;
-        date: Date;
         description: string;
+        date: Date;
         isExtraordinary: boolean;
         expenseCategory: string;
         appliesTo: string;
@@ -27,8 +27,8 @@ export declare class ExpensesController {
         id: string;
         tenantId: string;
         amount: number;
-        date: Date;
         description: string;
+        date: Date;
         isExtraordinary: boolean;
         expenseCategory: string;
         appliesTo: string;
@@ -40,8 +40,8 @@ export declare class ExpensesController {
         id: string;
         tenantId: string;
         amount: number;
-        date: Date;
         description: string;
+        date: Date;
         isExtraordinary: boolean;
         expenseCategory: string;
         appliesTo: string;

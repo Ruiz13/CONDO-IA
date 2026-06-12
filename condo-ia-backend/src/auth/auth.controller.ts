@@ -22,8 +22,8 @@ export class AuthController {
     return this.authService.updateAvatar(body.userId, body.avatarBase64);
   }
   @Post('update-profile')
-  updateProfile(@Body() body: { userId: string, newEmail?: string, newPassword?: string }) {
-    return this.authService.updateProfile(body.userId, body.newEmail, body.newPassword);
+  updateProfile(@Body() body: { userId: string, newEmail?: string, newPassword?: string, newName?: string }) {
+    return this.authService.updateProfile(body.userId, body.newEmail, body.newPassword, body.newName);
   }
 
   @Post('admin-reset-password')

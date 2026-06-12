@@ -39,6 +39,7 @@ model User {
   id                 String   @id @default(uuid())
   tenantId           String?
   email              String   @unique
+  name               String?
   passwordHash       String
   role               String   // SUPER_ADMIN, ADMIN, or OWNER
   mustChangePassword Boolean  @default(true)

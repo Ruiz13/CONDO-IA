@@ -30,7 +30,7 @@ let AuthController = class AuthController {
         return this.authService.updateAvatar(body.userId, body.avatarBase64);
     }
     updateProfile(body) {
-        return this.authService.updateProfile(body.userId, body.newEmail, body.newPassword);
+        return this.authService.updateProfile(body.userId, body.newEmail, body.newPassword, body.newName);
     }
     adminResetPassword(body) {
         return this.authService.adminResetPassword(body.adminId, body.targetEmail, body.newPassword || 'admin123');

@@ -2,17 +2,17 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function poll() {
   const url = 'https://condo-ia-backend.onrender.com/api/tenants/version';
-  console.log("Starting polling for version bcryptjs-v2...");
+  console.log("Starting polling for version bcryptjs-v3...");
   for (let i = 0; i < 30; i++) {
     try {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         console.log(`[Attempt ${i+1}] Version:`, data.version);
-        if (data.version === 'bcryptjs-v2') {
-          console.log("NEW DEPLOY SUCCESSFUL AND ACTIVE!");
-          // Let's test the flow
-          await runFlow();
+        if (data.version === 'bcryptjs-v3') {
+          console.log("NEW DEPLOY (bcryptjs-v3) SUCCESSFUL AND ACTIVE!");
+          // Let's run the DB push and then the test flow
+          await runDbPushAndFlow();
           return;
         }
       } else {
@@ -26,8 +26,23 @@ async function poll() {
   console.log("Polling timed out.");
 }
 
-async function runFlow() {
+async function runDbPushAndFlow() {
   try {
+    // 1. Run DB Push
+    console.log("\nCalling /api/tenants/db-push on the live server to execute Prisma db push...");
+    const pushRes = await fetch('https://condo-ia-backend.onrender.com/api/tenants/db-push', {
+      method: 'POST'
+    });
+    console.log("DB Push Status:", pushRes.status);
+    const pushResult = await pushRes.json();
+    console.log("DB Push Result:", pushResult);
+
+    if (pushResult.error) {
+      console.error("DB Push failed, aborting flow.");
+      return;
+    }
+
+    // 2. Get tenants
     const tenantsRes = await fetch('https://condo-ia-backend.onrender.com/api/tenants');
     const tenants = await tenantsRes.json();
     console.log("\nTenants found on live server:");
@@ -43,7 +58,7 @@ async function runFlow() {
     }
     console.log(`\nTargeting Tenant: ${targetTenant.name} (${targetTenant.id})`);
 
-    // Reset password
+    // 3. Reset password
     console.log("Calling reset-admin-password...");
     const resetRes = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${targetTenant.id}/reset-admin-password`, {
       method: 'POST'
@@ -52,7 +67,7 @@ async function runFlow() {
     const resetData = await resetRes.json();
     console.log("Reset Response:", resetData);
 
-    // Try to login
+    // 4. Try to login
     console.log("\nTrying to log in with admin@residenciasimolatorrea.com / admin123...");
     const loginRes = await fetch('https://condo-ia-backend.onrender.com/api/auth/login', {
       method: 'POST',

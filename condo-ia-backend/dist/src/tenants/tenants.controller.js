@@ -27,12 +27,12 @@ let TenantsController = class TenantsController {
         return this.tenantsService.getAllTenants();
     }
     version() {
-        return { version: 'bcryptjs-v3' };
+        return { version: 'bcryptjs-v4' };
     }
     async dbPush() {
         const { exec } = require('child_process');
         return new Promise((resolve) => {
-            exec('npx prisma db push', (error, stdout, stderr) => {
+            exec('DIRECT_URL="$DATABASE_URL" npx prisma db push', (error, stdout, stderr) => {
                 resolve({
                     error: error ? error.message : null,
                     stdout,

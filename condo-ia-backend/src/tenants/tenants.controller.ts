@@ -115,6 +115,15 @@ export class TenantsController {
     return this.tenantsService.createUnitAndOwner(tenantId, body.unitNumber, body.ownerEmail, body.ownerPassword, body.aliquotPercentage);
   }
 
+  @Patch(':tenantId/units/:unitId')
+  async updateUnit(
+    @Param('tenantId') tenantId: string,
+    @Param('unitId') unitId: string,
+    @Body() body: { email?: string; name?: string; unitNumber?: string; aliquotPercentage?: number }
+  ) {
+    return this.tenantsService.updateUnitAndOwner(tenantId, unitId, body);
+  }
+
   @Delete(':tenantId/units/:unitId')
   async deleteUnit(
     @Param('tenantId') tenantId: string,

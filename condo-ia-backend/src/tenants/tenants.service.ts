@@ -252,10 +252,47 @@ export class TenantsService {
     return this.prisma.unit.findMany({
       where: { tenantId },
       include: {
-        owner: { select: { id: true, email: true } },
+        owner: { select: { id: true, email: true, name: true } },
         invoices: true
       },
       orderBy: { unitNumber: 'asc' }
+    });
+  }
+
+  async updateUnitAndOwner(tenantId: string, unitId: string, data: { email?: string; name?: string; unitNumber?: string; aliquotPercentage?: number }) {
+    const unit = await this.prisma.unit.findUnique({ where: { id: unitId, tenantId }, include: { owner: true } });
+    if (!unit) throw new BadRequestException('Apartamento/Local no encontrado');
+
+    return await this.prisma.$transaction(async (tx) => {
+      // update user if email or name
+      if (unit.ownerId && (data.email !== undefined || data.name !== undefined)) {
+        // check if email already in use
+        if (data.email && data.email !== unit.owner.email) {
+          const existingUser = await tx.user.findUnique({ where: { email: data.email } });
+          if (existingUser) {
+            throw new BadRequestException('El correo ya está en uso por otro usuario');
+          }
+        }
+        await tx.user.update({
+          where: { id: unit.ownerId },
+          data: {
+            email: data.email !== undefined ? data.email : unit.owner.email,
+            name: data.name !== undefined ? data.name : unit.owner.name,
+          }
+        });
+      }
+      
+      // update unit
+      if (data.unitNumber !== undefined || data.aliquotPercentage !== undefined) {
+        await tx.unit.update({
+          where: { id: unitId },
+          data: {
+            unitNumber: data.unitNumber !== undefined ? data.unitNumber : unit.unitNumber,
+            aliquotPercentage: data.aliquotPercentage !== undefined ? data.aliquotPercentage : unit.aliquotPercentage
+          }
+        });
+      }
+      return { success: true, message: 'Residente actualizado correctamente' };
     });
   }
 

@@ -29,7 +29,7 @@ let TenantsController = class TenantsController {
         return this.tenantsService.getAllTenants();
     }
     version() {
-        return { version: 'bcryptjs-v8' };
+        return { version: 'bcryptjs-v9' };
     }
     static dbPushStatus = { status: 'idle' };
     async dbPush() {

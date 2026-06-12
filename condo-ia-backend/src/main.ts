@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as express from 'express';
 import * as dotenv from 'dotenv';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 
 dotenv.config();
 

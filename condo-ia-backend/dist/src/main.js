@@ -37,12 +37,13 @@ const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const express = __importStar(require("express"));
 const dotenv = __importStar(require("dotenv"));
+const child_process_1 = require("child_process");
 dotenv.config();
 try {
     console.log('[STARTUP] Iniciando prisma db push en segundo plano...');
     const dbUrl = process.env.DATABASE_URL || '';
     const directUrl = dbUrl.replace('-pooler', '').replace('&pgbouncer=true', '').replace('?pgbouncer=true', '');
-    exec('npx prisma db push --accept-data-loss', {
+    (0, child_process_1.exec)('npx prisma db push --accept-data-loss', {
         env: { ...process.env, DIRECT_URL: directUrl }
     }, (error, stdout, stderr) => {
         if (error) {

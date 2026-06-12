@@ -31,7 +31,7 @@ export class TenantsController {
 
   @Get('version')
   version() {
-    return { version: 'bcryptjs-v11' };
+    return { version: 'bcryptjs-v12' };
   }
 
   private static dbPushStatus: any = { status: 'idle' };

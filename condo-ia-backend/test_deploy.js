@@ -2,15 +2,15 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function poll() {
   const url = 'https://condo-ia-backend.onrender.com/api/tenants/version';
-  console.log("Starting polling for version bcryptjs-v6...");
+  console.log("Starting polling for version bcryptjs-v7...");
   for (let i = 0; i < 30; i++) {
     try {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         console.log(`[Attempt ${i+1}] Version:`, data.version);
-        if (data.version === 'bcryptjs-v6') {
-          console.log("NEW DEPLOY (bcryptjs-v6) SUCCESSFUL AND ACTIVE!");
+        if (data.version === 'bcryptjs-v7') {
+          console.log("NEW DEPLOY (bcryptjs-v7) SUCCESSFUL AND ACTIVE!");
           await runDbPushAndFlow();
           return;
         }
@@ -28,7 +28,7 @@ async function poll() {
 async function runDbPushAndFlow() {
   try {
     // 1. Run DB Push in background
-    console.log("\nTriggering async db-push with --accept-data-loss...");
+    console.log("\nTriggering async db-push with safe env configuration...");
     const pushRes = await fetch('https://condo-ia-backend.onrender.com/api/tenants/db-push', { method: 'POST' });
     const pushResult = await pushRes.json();
     console.log("Trigger response:", pushResult);
@@ -36,7 +36,7 @@ async function runDbPushAndFlow() {
     // 2. Poll status
     console.log("\nPolling db-push status...");
     for (let i = 0; i < 30; i++) {
-      await sleep(10000);
+      await sleep(5000);
       const statusRes = await fetch('https://condo-ia-backend.onrender.com/api/tenants/db-push-status');
       const statusData = await statusRes.json();
       console.log(`[Status Attempt ${i+1}]`, statusData.status);

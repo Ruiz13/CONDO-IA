@@ -29,7 +29,7 @@ let TenantsController = class TenantsController {
         return this.tenantsService.getAllTenants();
     }
     version() {
-        return { version: 'bcryptjs-v7' };
+        return { version: 'bcryptjs-v8' };
     }
     static dbPushStatus = { status: 'idle' };
     async dbPush() {
@@ -38,7 +38,9 @@ let TenantsController = class TenantsController {
         }
         TenantsController_1.dbPushStatus = { status: 'running', startTime: new Date() };
         const { exec } = require('child_process');
-        const env = { ...process.env, DIRECT_URL: process.env.DATABASE_URL };
+        const dbUrl = process.env.DATABASE_URL || '';
+        const directUrl = dbUrl.replace('-pooler', '').replace('&pgbouncer=true', '').replace('?pgbouncer=true', '');
+        const env = { ...process.env, DIRECT_URL: directUrl };
         exec('npx prisma db push --accept-data-loss', { env }, (error, stdout, stderr) => {
             if (error) {
                 TenantsController_1.dbPushStatus = {

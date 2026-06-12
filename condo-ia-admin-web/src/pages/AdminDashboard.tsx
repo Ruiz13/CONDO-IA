@@ -1350,20 +1350,27 @@ export default function AdminDashboard() {
                     <thead>
                       <tr className="border-b border-white/10 text-gray-400">
                         <th className="p-3 font-medium">Apartamento</th>
-                        <th className="p-3 font-medium">Propietario (Correo)</th>
+                        <th className="p-3 font-medium">Propietario</th>
+                        <th className="p-3 font-medium">Correo</th>
                         <th className="p-3 font-medium">Alícuota</th>
                       </tr>
                     </thead>
                     <tbody>
                       {units
                         .filter(unit => unit.unitNumber.toLowerCase().includes(searchTermResidentes.toLowerCase()) || unit.owner?.email?.toLowerCase().includes(searchTermResidentes.toLowerCase()))
-                        .map((unit: any) => (
-                        <tr key={unit.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                          <td className="p-3 font-bold text-white">{unit.unitNumber}</td>
-                          <td className="p-3 text-gray-300">{unit.owner?.email}</td>
-                          <td className="p-3 text-indigo-400">{unit.aliquotPercentage}%</td>
-                        </tr>
-                      ))}
+                        .map((unit: any) => {
+                        const ownerName = unit.owner?.email 
+                          ? unit.owner.email.split('@')[0].replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) 
+                          : 'N/A';
+                        return (
+                          <tr key={unit.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                            <td className="p-3 font-bold text-white">{unit.unitNumber}</td>
+                            <td className="p-3 text-white">{ownerName}</td>
+                            <td className="p-3 text-gray-400 text-sm">{unit.owner?.email}</td>
+                            <td className="p-3 text-indigo-400">{unit.aliquotPercentage}%</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

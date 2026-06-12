@@ -2,7 +2,7 @@ services:
   - type: web
     name: condo-ia-backend
     env: node
-    buildCommand: npm install && npx prisma generate && DIRECT_URL="$DATABASE_URL" npx prisma db push --accept-data-loss && npm run build
+    buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV

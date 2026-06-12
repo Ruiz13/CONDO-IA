@@ -60,9 +60,9 @@ export declare class TenantsController {
     }>;
     getUnitsByTenant(tenantId: string): Promise<({
         invoices: {
-            tenantId: string;
             id: string;
             createdAt: Date;
+            tenantId: string;
             unitId: string;
             month: number;
             year: number;
@@ -75,12 +75,12 @@ export declare class TenantsController {
             email: string;
         };
     } & {
-        tenantId: string;
         id: string;
-        ownerId: string;
+        tenantId: string;
         unitNumber: string;
         aliquotPercentage: number;
         isCommercial: boolean;
+        ownerId: string;
     })[]>;
     createUnitAndOwner(tenantId: string, body: {
         unitNumber: string;
@@ -90,12 +90,12 @@ export declare class TenantsController {
     }): Promise<{
         success: boolean;
         unit: {
-            tenantId: string;
             id: string;
-            ownerId: string;
+            tenantId: string;
             unitNumber: string;
             aliquotPercentage: number;
             isCommercial: boolean;
+            ownerId: string;
         };
     }>;
     deleteUnit(tenantId: string, unitId: string): Promise<{
@@ -119,28 +119,28 @@ export declare class TenantsController {
     getFinancialReport(tenantId: string): Promise<{
         payments: ({
             unit: {
-                tenantId: string;
                 id: string;
-                ownerId: string;
+                tenantId: string;
                 unitNumber: string;
                 aliquotPercentage: number;
                 isCommercial: boolean;
+                ownerId: string;
             };
         } & {
-            tenantId: string;
             id: string;
             createdAt: Date;
+            tenantId: string;
             unitId: string;
             status: string;
             amount: number;
-            ocrConfidence: number | null;
             paymentMethod: string;
             referenceNumber: string | null;
+            ocrConfidence: number | null;
             receiptUrl: string | null;
         })[];
         expenses: {
-            tenantId: string;
             id: string;
+            tenantId: string;
             amount: number;
             date: Date;
             description: string;
@@ -209,8 +209,8 @@ export declare class TenantsController {
                 name: string;
                 isActive: boolean;
             } | null;
-            role: string;
             email: string;
+            role: string;
         }[];
     }>;
     reactivateAllTenants(): Promise<{

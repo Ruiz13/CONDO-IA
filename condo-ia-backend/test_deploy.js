@@ -2,16 +2,16 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function poll() {
   const url = 'https://condo-ia-backend.onrender.com/api/tenants/version';
-  console.log("Starting polling for version bcryptjs-v9...");
-  for (let i = 0; i < 30; i++) {
+  console.log("Starting polling for version bcryptjs-v10...");
+  for (let i = 0; i < 40; i++) {
     try {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         console.log(`[Attempt ${i+1}] Version:`, data.version);
-        if (data.version === 'bcryptjs-v9') {
-          console.log("NEW DEPLOY (bcryptjs-v9) SUCCESSFUL AND ACTIVE!");
-          await runDbPushAndFlow();
+        if (data.version === 'bcryptjs-v10') {
+          console.log("NEW DEPLOY (bcryptjs-v10) SUCCESSFUL AND ACTIVE!");
+          await runFlow();
           return;
         }
       } else {
@@ -25,34 +25,9 @@ async function poll() {
   console.log("Polling timed out.");
 }
 
-async function runDbPushAndFlow() {
+async function runFlow() {
   try {
-    // 1. Run DB Push in background
-    console.log("\nTriggering async db-push with prisma in production dependencies...");
-    const pushRes = await fetch('https://condo-ia-backend.onrender.com/api/tenants/db-push', { method: 'POST' });
-    const pushResult = await pushRes.json();
-    console.log("Trigger response:", pushResult);
-
-    // 2. Poll status
-    console.log("\nPolling db-push status...");
-    for (let i = 0; i < 30; i++) {
-      await sleep(5000);
-      const statusRes = await fetch('https://condo-ia-backend.onrender.com/api/tenants/db-push-status');
-      const statusData = await statusRes.json();
-      console.log(`[Status Attempt ${i+1}]`, statusData.status);
-      if (statusData.status === 'success') {
-        console.log("DB Push Succeeded!");
-        console.log("Stdout:", statusData.stdout);
-        break;
-      } else if (statusData.status === 'error') {
-        console.error("DB Push Failed with Error:", statusData.error);
-        console.error("Stderr:", statusData.stderr);
-        console.error("Stdout:", statusData.stdout);
-        return;
-      }
-    }
-
-    // 3. Get tenants
+    // Get tenants
     const tenantsRes = await fetch('https://condo-ia-backend.onrender.com/api/tenants');
     const tenants = await tenantsRes.json();
 
@@ -64,7 +39,7 @@ async function runDbPushAndFlow() {
     }
     console.log(`\nTargeting Tenant: ${targetTenant.name} (${targetTenant.id})`);
 
-    // 4. Reset password
+    // Reset password
     console.log("Calling reset-admin-password...");
     const resetRes = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${targetTenant.id}/reset-admin-password`, {
       method: 'POST'
@@ -73,7 +48,7 @@ async function runDbPushAndFlow() {
     const resetData = await resetRes.json();
     console.log("Reset Response:", resetData);
 
-    // 5. Try to login
+    // Try to login
     console.log("\nTrying to log in with admin@residenciasimolatorrea.com / admin123...");
     const loginRes = await fetch('https://condo-ia-backend.onrender.com/api/auth/login', {
       method: 'POST',

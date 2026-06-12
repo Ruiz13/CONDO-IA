@@ -1,19 +1,10 @@
 async function test() {
   try {
-    console.log("Trying to log in with admin@residenciasimolatorrea.com / admin123...");
-    const loginRes = await fetch('https://condo-ia-backend.onrender.com/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: 'admin@residenciasimolatorrea.com',
-        password: 'admin123'
-      })
-    });
-    console.log("Login Status:", loginRes.status);
-    const loginData = await loginRes.json();
-    console.log("Login Response:", loginData);
+    const res = await fetch('https://condo-ia-backend.onrender.com/api/tenants/db-push-status');
+    const data = await res.json();
+    console.log("Status Response:", JSON.stringify(data, null, 2));
   } catch (e) {
-    console.error("Test Error:", e);
+    console.error("Error:", e);
   }
 }
 test();

@@ -16,9 +16,7 @@ export default function HomeScreen() {
     if (!user) return;
     
     try {
-      const res = await fetch(API_URL(`/api/invoices/pending/${user.id}?cb=${Math.random()}`), {
-        headers: { "Bypass-Tunnel-Reminder": "true" },
-      });
+      const res = await fetch(API_URL(`/api/invoices/pending/${user.id}?cb=${Math.random()}`));
       const data = await res.json();
       
       if (Array.isArray(data) && data.length > 0) {

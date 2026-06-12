@@ -2,8 +2,9 @@ import React, { useState, useRef } from 'react';
 import {
   StyleSheet, Text, View, TextInput, TouchableOpacity,
   ScrollView, SafeAreaView, KeyboardAvoidingView,
-  Platform, ActivityIndicator, Clipboard, Alert
+  Platform, ActivityIndicator, Alert
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
@@ -31,9 +32,7 @@ export default function ChatScreen() {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch(API_URL(`/api/chat/${user?.id}`), {
-        headers: { 'Bypass-Tunnel-Reminder': 'true' }
-      });
+      const res = await fetch(API_URL(`/api/chat/${user?.id}`));
       if (res.ok) {
         const data = await res.json();
         if (data.length > 0) {
@@ -45,8 +44,8 @@ export default function ChatScreen() {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    Clipboard.setString(text);
+  const copyToClipboard = async (text: string) => {
+    await Clipboard.setStringAsync(text);
     Alert.alert('Copiado', 'Mensaje copiado al portapapeles');
   };
 
@@ -63,7 +62,6 @@ export default function ChatScreen() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Bypass-Tunnel-Reminder': 'true'
         },
         body: JSON.stringify({ message: userMsg.text, userId: user?.id }),
       });

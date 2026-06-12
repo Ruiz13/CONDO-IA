@@ -26,9 +26,7 @@ export default function InvoicesScreen() {
   const fetchInvoices = async () => {
     if (!user?.id) return;
     try {
-      const res = await fetch(API_URL(`/api/invoices/user/${user.id}`), {
-        headers: { 'Bypass-Tunnel-Reminder': 'true' }
-      });
+      const res = await fetch(API_URL(`/api/invoices/user/${user.id}`));
       if (res.ok) {
         const data = await res.json();
         setInvoices(data);

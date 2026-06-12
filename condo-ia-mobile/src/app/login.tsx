@@ -34,7 +34,6 @@ export default function LoginScreen() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Bypass-Tunnel-Reminder": "true",
         },
         body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });

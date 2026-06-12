@@ -36,9 +36,7 @@ export default function ReportPaymentScreen() {
   const fetchInvoices = async () => {
     if (!user) return;
     try {
-      const res = await fetch(API_URL(`/api/invoices/pending/${user.id}`), {
-        headers: { "Bypass-Tunnel-Reminder": "true" },
-      });
+      const res = await fetch(API_URL(`/api/invoices/pending/${user.id}`));
       const data = await res.json();
       setInvoices(data);
       
@@ -80,7 +78,6 @@ export default function ReportPaymentScreen() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Bypass-Tunnel-Reminder": "true",
         },
         body: JSON.stringify({ base64Image }),
       });
@@ -119,7 +116,6 @@ export default function ReportPaymentScreen() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Bypass-Tunnel-Reminder": "true",
         },
         body: JSON.stringify({
           unitId,

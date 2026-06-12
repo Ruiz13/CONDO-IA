@@ -28,9 +28,6 @@ export default function VotingScreen() {
     try {
       const res = await fetch(
         API_URL(`/api/communications/polls/${user.tenantId}`),
-        {
-          headers: { "Bypass-Tunnel-Reminder": "true" },
-        },
       );
       const data = await res.json();
       setPolls(data);
@@ -55,7 +52,6 @@ export default function VotingScreen() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Bypass-Tunnel-Reminder": "true",
           },
           body: JSON.stringify({ optionId, userId: user.id }),
         },

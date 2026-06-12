@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Vote, LayoutDashboard, Settings, FileText, Loader2, Megaphone, Bot, Trash2, TrendingUp, TrendingDown, Clock, Download, CalendarDays, Check, X } from 'lucide-react';
+import { LogOut, Users, Vote, LayoutDashboard, Settings, FileText, Loader2, Megaphone, Bot, Trash2, TrendingUp, TrendingDown, Clock, Download, CalendarDays, Check, X, RefreshCw, Upload, CheckCircle, FileSpreadsheet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -62,6 +62,13 @@ export default function AdminDashboard() {
   const [generatingInvoices, setGeneratingInvoices] = useState(false);
   const [pendingPayments, setPendingPayments] = useState<any[]>([]);
   const [approvingPayment, setApprovingPayment] = useState<string | null>(null);
+
+  // Conciliacion State
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [parsingFile, setParsingFile] = useState(false);
+  const [reconciling, setReconciling] = useState(false);
+  const [reconciliationResults, setReconciliationResults] = useState<any>(null);
 
   // Reservas
   const [reservations, setReservations] = useState<any[]>([]);
@@ -563,6 +570,170 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadedFile(file);
+    setTransactions([]);
+    setReconciliationResults(null);
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+      handleExcelUpload(file);
+    } else if (ext === 'pdf') {
+      handlePdfUpload(file);
+    } else {
+      toast.error('Tipo de archivo no soportado. Suba un archivo Excel (.xlsx/.xls), CSV o PDF.');
+    }
+  };
+
+  const handleExcelUpload = (file: File) => {
+    setParsingFile(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json: any[] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        const parsedTransactions: any[] = [];
+        
+        let refColIdx = -1;
+        let amountColIdx = -1;
+        let dateColIdx = -1;
+        let descColIdx = -1;
+        
+        if (json.length > 0) {
+          for (let r = 0; r < Math.min(5, json.length); r++) {
+            const row = json[r];
+            if (!Array.isArray(row)) continue;
+            for (let c = 0; c < row.length; c++) {
+              const cellVal = String(row[c]).toLowerCase();
+              if (cellVal.includes('ref') || cellVal.includes('operacion') || cellVal.includes('transaccion') || cellVal.includes('documento')) {
+                refColIdx = c;
+              }
+              if (cellVal.includes('monto') || cellVal.includes('importe') || cellVal.includes('credito') || cellVal.includes('abono') || cellVal.includes('deposito') || cellVal.includes('monto total')) {
+                amountColIdx = c;
+              }
+              if (cellVal.includes('fecha') || cellVal.includes('date')) {
+                dateColIdx = c;
+              }
+              if (cellVal.includes('descrip') || cellVal.includes('concepto') || cellVal.includes('detalle') || cellVal.includes('motivo')) {
+                descColIdx = c;
+              }
+            }
+            if (refColIdx !== -1 && amountColIdx !== -1) {
+              break;
+            }
+          }
+        }
+        
+        const startRow = 1;
+        
+        for (let i = startRow; i < json.length; i++) {
+          const row = json[i];
+          if (!row || row.length === 0) continue;
+          
+          let date = '';
+          let description = '';
+          let referenceNumber = '';
+          let amount = 0;
+          
+          if (refColIdx !== -1 && amountColIdx !== -1) {
+            date = dateColIdx !== -1 ? String(row[dateColIdx] || '') : '';
+            description = descColIdx !== -1 ? String(row[descColIdx] || '') : '';
+            referenceNumber = String(row[refColIdx] || '');
+            amount = Number(String(row[amountColIdx] || '0').replace(/[^0-9.-]/g, ''));
+          } else {
+            for (const cell of row) {
+              const strVal = String(cell).trim();
+              if (/^\d{6,12}$/.test(strVal)) {
+                referenceNumber = strVal;
+              } else if (/^-?\d+(\.\d{1,2})?$/.test(strVal) && Number(strVal) !== 0) {
+                const num = Number(strVal);
+                if (num > 0) amount = num;
+              }
+            }
+          }
+          
+          if (referenceNumber && amount > 0) {
+            parsedTransactions.push({
+              date: date || 'N/A',
+              description: description || 'Depósito Bancario',
+              referenceNumber,
+              amount
+            });
+          }
+        }
+        
+        setTransactions(parsedTransactions);
+        toast.success(`Se extrajeron ${parsedTransactions.length} transacciones del Excel.`);
+      } catch (err) {
+        toast.error('Error al leer el archivo Excel.');
+        console.error(err);
+      } finally {
+        setParsingFile(false);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handlePdfUpload = async (file: File) => {
+    setParsingFile(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/payments/reconciliation/parse-pdf`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.transactions)) {
+        setTransactions(data.transactions);
+        toast.success(`Se extrajeron ${data.transactions.length} transacciones del PDF.`);
+      } else {
+        toast.error(data.error || 'Error al procesar el PDF');
+      }
+    } catch (err) {
+      toast.error('Error al conectar con el servidor.');
+      console.error(err);
+    } finally {
+      setParsingFile(false);
+    }
+  };
+
+  const runReconciliation = async () => {
+    setReconciling(true);
+    try {
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/payments/reconciliation/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transactions,
+          adminId: user?.id
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReconciliationResults(data);
+        toast.success('Conciliación completada exitosamente.');
+        fetchPendingPayments();
+      } else {
+        toast.error(data.error || 'Error al procesar la conciliación');
+      }
+    } catch (err) {
+      toast.error('Error de red al procesar conciliación.');
+      console.error(err);
+    } finally {
+      setReconciling(false);
+    }
+  };
+
   const fetchPolls = async () => {
     try {
       const res = await fetch(`https://condo-ia-backend.onrender.com/api/communications/polls/${user.tenantId}`);
@@ -871,7 +1042,20 @@ export default function AdminDashboard() {
             <span className="font-medium">Cerebro IA</span>
           </button>
 
-
+          <button
+            onClick={() => {
+              setActiveTab('conciliacion');
+              setUploadedFile(null);
+              setTransactions([]);
+              setReconciliationResults(null);
+            }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              activeTab === 'conciliacion' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-gray-400 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <RefreshCw className="w-5 h-5 text-purple-400" />
+            <span className="font-medium">Conciliación</span>
+          </button>
 
           <button
             onClick={() => setActiveTab('perfil')}
@@ -1781,6 +1965,297 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+
+        {activeTab === 'conciliacion' && (
+          <div className="space-y-8 animate-fadeIn">
+            {/* Header section */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h2 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                  <RefreshCw className="w-8 h-8 text-indigo-500 animate-spin-slow" />
+                  Conciliación Bancaria Inteligente
+                </h2>
+                <p className="text-gray-400 mt-1">
+                  Sube tu estado de cuenta en formato Excel (.xlsx/.xls), CSV o PDF para cruzar los pagos con los reportes de los propietarios.
+                </p>
+              </div>
+            </div>
+
+            {/* Main Area: Upload & Quick Steps */}
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="md:col-span-2 bg-[#0a0a16] border border-white/10 rounded-2xl p-6 flex flex-col justify-center items-center relative overflow-hidden group hover:border-indigo-500/30 transition-all duration-300 min-h-[250px]">
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  accept=".xlsx,.xls,.csv,.pdf"
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                  disabled={parsingFile || reconciling}
+                />
+                <div className="flex flex-col items-center justify-center text-center z-0 pointer-events-none">
+                  {parsingFile ? (
+                    <>
+                      <Loader2 className="w-12 h-12 text-indigo-500 animate-spin mb-4" />
+                      <p className="text-white font-bold text-lg">Procesando y extrayendo transacciones...</p>
+                      <p className="text-gray-500 text-sm mt-1">Nuestra IA y parseadores están leyendo el archivo</p>
+                    </>
+                  ) : uploadedFile ? (
+                    <>
+                      {uploadedFile.name.endsWith('.pdf') ? (
+                        <FileText className="w-16 h-16 text-red-500 mb-4" />
+                      ) : (
+                        <FileSpreadsheet className="w-16 h-16 text-emerald-500 mb-4" />
+                      )}
+                      <p className="text-white font-bold text-lg">{uploadedFile.name}</p>
+                      <p className="text-gray-500 text-sm mt-1">{(uploadedFile.size / 1024).toFixed(1)} KB — Listo para conciliar</p>
+                      <button 
+                        type="button"
+                        className="mt-4 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-300 hover:bg-white/10 transition-all text-xs"
+                      >
+                        Cambiar archivo
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="p-4 bg-indigo-500/10 rounded-full mb-4 group-hover:scale-110 transition-transform">
+                        <Upload className="w-8 h-8 text-indigo-400" />
+                      </div>
+                      <p className="text-white font-bold text-lg">Arrastra tu archivo aquí o haz clic para buscar</p>
+                      <p className="text-gray-500 text-sm mt-1">Formatos soportados: Excel (.xlsx, .xls), CSV, y estados de cuenta PDF</p>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 space-y-4">
+                <h3 className="text-lg font-bold text-white">¿Cómo funciona?</h3>
+                <ol className="space-y-4 text-sm text-gray-400 list-decimal list-inside">
+                  <li>
+                    <strong className="text-white">Sube el archivo</strong> de tu banco.
+                  </li>
+                  <li>
+                    El sistema <strong className="text-white">extrae los ingresos</strong> (depósitos y abonos) detectando el número de referencia y monto.
+                  </li>
+                  <li>
+                    Presiona <strong className="text-white">Iniciar Conciliación</strong> para buscar coincidencias con los reportes de tus residentes.
+                  </li>
+                  <li>
+                    Los pagos que coincidan exactamente se aprobarán y acreditarán automáticamente.
+                  </li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Preview Section */}
+            {transactions.length > 0 && !reconciliationResults && (
+              <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Transacciones Bancarias Detectadas</h3>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Verifique que las referencias y montos se hayan extraído correctamente antes de iniciar.
+                    </p>
+                  </div>
+                  <button
+                    onClick={runReconciliation}
+                    disabled={reconciling}
+                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50"
+                  >
+                    {reconciling ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Conciliando...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-5 h-5" />
+                        Ejecutar Conciliación
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-gray-300">
+                    <thead>
+                      <tr className="border-b border-white/10 text-gray-400">
+                        <th className="py-3 px-4">Fecha</th>
+                        <th className="py-3 px-4">Descripción</th>
+                        <th className="py-3 px-4">Referencia</th>
+                        <th className="py-3 px-4 text-right">Monto</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {transactions.map((tx, idx) => (
+                        <tr key={idx} className="hover:bg-white/5 transition-colors">
+                          <td className="py-3 px-4 text-xs font-mono">{tx.date}</td>
+                          <td className="py-3 px-4 text-xs max-w-xs truncate">{tx.description}</td>
+                          <td className="py-3 px-4 font-mono font-bold text-indigo-400 text-xs">{tx.referenceNumber}</td>
+                          <td className="py-3 px-4 text-right font-mono font-bold text-white">${Number(tx.amount).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Results Section */}
+            {reconciliationResults && (
+              <div className="space-y-6">
+                {/* Scorecards */}
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 flex items-center justify-between">
+                    <div>
+                      <span className="text-gray-400 text-xs font-semibold block uppercase tracking-wider">Conciliados (Auto-Aprobados)</span>
+                      <span className="text-3xl font-extrabold text-emerald-400 mt-1 block">{reconciliationResults.matchedCount}</span>
+                    </div>
+                    <div className="p-3 bg-emerald-500/10 rounded-full">
+                      <CheckCircle className="w-8 h-8 text-emerald-400" />
+                    </div>
+                  </div>
+                  <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 flex items-center justify-between">
+                    <div>
+                      <span className="text-gray-400 text-xs font-semibold block uppercase tracking-wider">No Encontrados en Sistema</span>
+                      <span className="text-3xl font-extrabold text-yellow-500 mt-1 block">{reconciliationResults.unmatchedBankCount}</span>
+                    </div>
+                    <div className="p-3 bg-yellow-500/10 rounded-full">
+                      <X className="w-8 h-8 text-yellow-400" />
+                    </div>
+                  </div>
+                  <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 flex items-center justify-between">
+                    <div>
+                      <span className="text-gray-400 text-xs font-semibold block uppercase tracking-wider">Pagos en Sistema sin Confirmar</span>
+                      <span className="text-3xl font-extrabold text-indigo-400 mt-1 block">{reconciliationResults.unmatchedSystemCount}</span>
+                    </div>
+                    <div className="p-3 bg-indigo-500/10 rounded-full">
+                      <Clock className="w-8 h-8 text-indigo-400" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tabs to show details */}
+                <div className="bg-[#0a0a16] border border-white/10 rounded-2xl p-6 space-y-6">
+                  <h3 className="text-lg font-bold text-white">Detalle de la Conciliación</h3>
+
+                  <div className="space-y-8">
+                    {/* Matched Payments */}
+                    {reconciliationResults.matched.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" /> Pagos Conciliados y Aprobados Correctamente ({reconciliationResults.matched.length})
+                        </h4>
+                        <div className="overflow-x-auto border border-white/5 rounded-xl">
+                          <table className="w-full text-left text-sm text-gray-300">
+                            <thead className="bg-white/5 text-gray-400">
+                              <tr>
+                                <th className="py-2.5 px-4">Unidad</th>
+                                <th className="py-2.5 px-4">Referencia</th>
+                                <th className="py-2.5 px-4 text-right">Monto</th>
+                                <th className="py-2.5 px-4">Estado</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                              {reconciliationResults.matched.map((item: any, idx: number) => (
+                                <tr key={idx}>
+                                  <td className="py-3 px-4 font-semibold text-white">{item.payment.unit?.unitNumber || 'Sistema'}</td>
+                                  <td className="py-3 px-4 font-mono text-xs">{item.payment.referenceNumber}</td>
+                                  <td className="py-3 px-4 text-right font-mono font-bold text-white">${Number(item.payment.amount).toFixed(2)}</td>
+                                  <td className="py-3 px-4">
+                                    <span className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-full">APROBADO AUTO</span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Unmatched Bank (Bank transactions not reported in system) */}
+                    {reconciliationResults.unmatchedBank.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-bold text-yellow-500 flex items-center gap-2">
+                          <X className="w-4 h-4" /> Depósitos en Cuenta Bancaria No Reportados en Condo IA ({reconciliationResults.unmatchedBank.length})
+                        </h4>
+                        <p className="text-xs text-gray-400">
+                          Estos montos ingresaron al banco pero ningún propietario los ha registrado aún en la app móvil.
+                        </p>
+                        <div className="overflow-x-auto border border-white/5 rounded-xl">
+                          <table className="w-full text-left text-sm text-gray-300">
+                            <thead className="bg-white/5 text-gray-400">
+                              <tr>
+                                <th className="py-2.5 px-4">Fecha</th>
+                                <th className="py-2.5 px-4">Descripción Banco</th>
+                                <th className="py-2.5 px-4">Referencia</th>
+                                <th className="py-2.5 px-4 text-right">Monto</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                              {reconciliationResults.unmatchedBank.map((bankTx: any, idx: number) => (
+                                <tr key={idx} className="text-gray-400">
+                                  <td className="py-3 px-4 font-mono text-xs">{bankTx.date}</td>
+                                  <td className="py-3 px-4 text-xs max-w-xs truncate">{bankTx.description}</td>
+                                  <td className="py-3 px-4 font-mono text-xs text-yellow-500">{bankTx.referenceNumber}</td>
+                                  <td className="py-3 px-4 text-right font-mono font-bold">${Number(bankTx.amount).toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Unmatched System (Pending payments in system not in bank) */}
+                    {reconciliationResults.unmatchedSystem.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-bold text-indigo-400 flex items-center gap-2">
+                          <Clock className="w-4 h-4" /> Reportes de Copropietarios No Hallados en el Banco ({reconciliationResults.unmatchedSystem.length})
+                        </h4>
+                        <p className="text-xs text-gray-400">
+                          Estos pagos fueron reportados por los residentes pero no se encontraron en este estado de cuenta. Requieren validación manual.
+                        </p>
+                        <div className="overflow-x-auto border border-white/5 rounded-xl">
+                          <table className="w-full text-left text-sm text-gray-300">
+                            <thead className="bg-white/5 text-gray-400">
+                              <tr>
+                                <th className="py-2.5 px-4">Apto/Local</th>
+                                <th className="py-2.5 px-4">Referencia Reportada</th>
+                                <th className="py-2.5 px-4 text-right">Monto</th>
+                                <th className="py-2.5 px-4">Acción</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                              {reconciliationResults.unmatchedSystem.map((payment: any, idx: number) => (
+                                <tr key={idx}>
+                                  <td className="py-3 px-4 font-semibold text-white">{payment.unit?.unitNumber}</td>
+                                  <td className="py-3 px-4 font-mono text-xs">{payment.referenceNumber}</td>
+                                  <td className="py-3 px-4 text-right font-mono font-bold text-white">${Number(payment.amount).toFixed(2)}</td>
+                                  <td className="py-3 px-4">
+                                    <button
+                                      onClick={() => {
+                                        setActiveTab('finanzas');
+                                        toast.success('Redirigiendo a Finanzas para aprobación manual');
+                                      }}
+                                      className="text-xs px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-lg transition-all"
+                                    >
+                                      Revisar Manual
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

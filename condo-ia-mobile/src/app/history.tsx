@@ -29,9 +29,7 @@ export default function HistoryScreen() {
   const fetchPayments = async () => {
     if (!user?.id) return;
     try {
-      const res = await fetch(API_URL(`/api/payments/user/${user.id}`), {
-        headers: { 'Bypass-Tunnel-Reminder': 'true' }
-      });
+      const res = await fetch(API_URL(`/api/payments/user/${user?.id}`));
       if (res.ok) {
         const data = await res.json();
         setPayments(data);

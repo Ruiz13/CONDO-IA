@@ -226,6 +226,58 @@ No incluyas markdown, comillas raras ni texto adicional.`;
             orderBy: { createdAt: 'desc' }
         });
     }
+    async reconcileTransactions(bankTransactions, adminId) {
+        const pendingPayments = await this.prisma.payment.findMany({
+            where: { status: 'PENDING' },
+            include: { unit: true }
+        });
+        const matched = [];
+        const unmatchedBank = [];
+        const matchedPaymentIds = new Set();
+        const cleanRef = (ref) => {
+            if (ref === undefined || ref === null)
+                return '';
+            return ref.toString().trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        };
+        for (const bankTx of bankTransactions) {
+            const bankRefClean = cleanRef(bankTx.referenceNumber);
+            const bankAmount = Number(bankTx.amount);
+            if (!bankRefClean || isNaN(bankAmount)) {
+                unmatchedBank.push({ ...bankTx, reason: 'Referencia o monto inválido' });
+                continue;
+            }
+            const match = pendingPayments.find(payment => {
+                if (matchedPaymentIds.has(payment.id))
+                    return false;
+                const paymentRefClean = cleanRef(payment.referenceNumber);
+                const refMatch = paymentRefClean === bankRefClean ||
+                    (paymentRefClean.length >= 4 && bankRefClean.endsWith(paymentRefClean)) ||
+                    (bankRefClean.length >= 4 && paymentRefClean.endsWith(bankRefClean));
+                const amountMatch = Math.abs(payment.amount - bankAmount) < 0.01;
+                return refMatch && amountMatch;
+            });
+            if (match) {
+                matchedPaymentIds.add(match.id);
+                const approved = await this.approvePayment(match.id, adminId);
+                matched.push({
+                    bankTx,
+                    payment: approved || match
+                });
+            }
+            else {
+                unmatchedBank.push(bankTx);
+            }
+        }
+        const unmatchedSystem = pendingPayments.filter(p => !matchedPaymentIds.has(p.id));
+        return {
+            matchedCount: matched.length,
+            unmatchedBankCount: unmatchedBank.length,
+            unmatchedSystemCount: unmatchedSystem.length,
+            matched,
+            unmatchedBank,
+            unmatchedSystem
+        };
+    }
 };
 exports.PaymentsService = PaymentsService;
 exports.PaymentsService = PaymentsService = PaymentsService_1 = __decorate([

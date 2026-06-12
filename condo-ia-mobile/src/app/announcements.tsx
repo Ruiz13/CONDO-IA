@@ -29,9 +29,6 @@ export default function AnnouncementsScreen() {
     try {
       const res = await fetch(
         API_URL(`/api/communications/announcements/${user.tenantId}`),
-        {
-          headers: { "Bypass-Tunnel-Reminder": "true" },
-        },
       );
       const data = await res.json();
       setAnnouncements(data);

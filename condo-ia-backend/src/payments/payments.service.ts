@@ -215,4 +215,73 @@ No incluyas markdown, comillas raras ni texto adicional.`;
       orderBy: { createdAt: 'desc' }
     });
   }
+
+  async reconcileTransactions(
+    bankTransactions: Array<{ date?: string; description?: string; referenceNumber: string; amount: number }>,
+    adminId?: string
+  ) {
+    // 1. Get all pending payments from the database
+    const pendingPayments = await this.prisma.payment.findMany({
+      where: { status: 'PENDING' },
+      include: { unit: true }
+    });
+
+    const matched: Array<{ bankTx: any; payment: any }> = [];
+    const unmatchedBank: Array<any> = [];
+    const matchedPaymentIds = new Set<string>();
+
+    const cleanRef = (ref: string | number) => {
+      if (ref === undefined || ref === null) return '';
+      return ref.toString().trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    };
+
+    // 2. Process each bank transaction
+    for (const bankTx of bankTransactions) {
+      const bankRefClean = cleanRef(bankTx.referenceNumber);
+      const bankAmount = Number(bankTx.amount);
+
+      if (!bankRefClean || isNaN(bankAmount)) {
+        unmatchedBank.push({ ...bankTx, reason: 'Referencia o monto inválido' });
+        continue;
+      }
+
+      // Try to find a matching pending payment
+      const match = pendingPayments.find(payment => {
+        if (matchedPaymentIds.has(payment.id)) return false;
+
+        const paymentRefClean = cleanRef(payment.referenceNumber);
+        const refMatch = paymentRefClean === bankRefClean || 
+                         (paymentRefClean.length >= 4 && bankRefClean.endsWith(paymentRefClean)) ||
+                         (bankRefClean.length >= 4 && paymentRefClean.endsWith(bankRefClean));
+
+        const amountMatch = Math.abs(payment.amount - bankAmount) < 0.01;
+
+        return refMatch && amountMatch;
+      });
+
+      if (match) {
+        // Approve this payment
+        matchedPaymentIds.add(match.id);
+        const approved = await this.approvePayment(match.id, adminId);
+        matched.push({
+          bankTx,
+          payment: approved || match
+        });
+      } else {
+        unmatchedBank.push(bankTx);
+      }
+    }
+
+    // 3. Find pending payments in our system that were not matched
+    const unmatchedSystem = pendingPayments.filter(p => !matchedPaymentIds.has(p.id));
+
+    return {
+      matchedCount: matched.length,
+      unmatchedBankCount: unmatchedBank.length,
+      unmatchedSystemCount: unmatchedSystem.length,
+      matched,
+      unmatchedBank,
+      unmatchedSystem
+    };
+  }
 }

@@ -57,7 +57,6 @@ export default function ProfileScreen() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Bypass-Tunnel-Reminder': 'true',
         },
         body: JSON.stringify({ userId: user?.id, avatarBase64: base64Image }),
       });

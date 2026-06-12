@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentsModule = void 0;
 const common_1 = require("@nestjs/common");
 const payments_controller_1 = require("./payments.controller");
+const reconciliation_controller_1 = require("./reconciliation.controller");
 const payments_service_1 = require("./payments.service");
 const prisma_module_1 = require("../prisma.module");
 const email_module_1 = require("../email/email.module");
@@ -18,7 +19,7 @@ exports.PaymentsModule = PaymentsModule;
 exports.PaymentsModule = PaymentsModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule, email_module_1.EmailModule],
-        controllers: [payments_controller_1.PaymentsController],
+        controllers: [payments_controller_1.PaymentsController, reconciliation_controller_1.ReconciliationController],
         providers: [payments_service_1.PaymentsService],
     })
 ], PaymentsModule);

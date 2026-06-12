@@ -230,7 +230,7 @@ No incluyas markdown, comillas raras ni texto adicional.`;
     const unmatchedBank: Array<any> = [];
     const matchedPaymentIds = new Set<string>();
 
-    const cleanRef = (ref: string | number) => {
+    const cleanRef = (ref: string | number | null) => {
       if (ref === undefined || ref === null) return '';
       return ref.toString().trim().toLowerCase().replace(/[^a-z0-9]/g, '');
     };

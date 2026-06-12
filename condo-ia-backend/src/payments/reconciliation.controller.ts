@@ -1,7 +1,7 @@
 import { Controller, Post, UseInterceptors, UploadedFile, Body, Logger, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PaymentsService } from './payments.service';
-import * as pdfParse from 'pdf-parse';
+import pdfParse from 'pdf-parse';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 @Controller('api/payments/reconciliation')

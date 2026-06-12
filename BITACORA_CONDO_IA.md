@@ -82,3 +82,5 @@ El ecosistema de Condo IA está compuesto por tres pilares fundamentales:
   - **Frontend (Admin Web):** Nueva sección de **"Conciliación"** en la barra lateral con subida de archivos Drag & Drop, lectura de archivos Excel (`xlsx` local) y PDF (vía backend), vista previa de filas detectadas, ejecución de cruce y visualización de resultados clasificados (Conciliados, No reportados, Reportados sin banco).
 - **Control Rodante de Auditoría de IA:**
   - Configurado un borrado automático de registros de chat de IA y auditorías de más de 7 días. Se ejecuta en tiempo real al solicitar los datos y de forma programada mediante un Cron diario (`@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)`). Esto mantiene el gráfico "Uso de la IA" mostrando únicamente la ventana móvil de los últimos 7 días.
+- **Ajuste de Interfaz de Finanzas (Recibos Emitidos):**
+  - Reemplazada la tabla de tres columnas en "Recibos Emitidos (Mes Actual)" por la estructura de la tabla de Residentes, mostrando ahora cuatro columnas: **Apartamento, Propietario (Correo), Alícuota y Deuda del mes**. Esto unifica la estética y muestra la información completa del propietario y su participación (alícuota).

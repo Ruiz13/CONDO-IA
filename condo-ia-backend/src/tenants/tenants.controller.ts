@@ -31,7 +31,21 @@ export class TenantsController {
 
   @Get('version')
   version() {
-    return { version: 'bcryptjs-v2' };
+    return { version: 'bcryptjs-v3' };
+  }
+
+  @Post('db-push')
+  async dbPush() {
+    const { exec } = require('child_process');
+    return new Promise((resolve) => {
+      exec('npx prisma db push', (error, stdout, stderr) => {
+        resolve({
+          error: error ? error.message : null,
+          stdout,
+          stderr
+        });
+      });
+    });
   }
 
   @Post('create-with-admin')

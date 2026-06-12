@@ -27,7 +27,19 @@ let TenantsController = class TenantsController {
         return this.tenantsService.getAllTenants();
     }
     version() {
-        return { version: 'bcryptjs-v2' };
+        return { version: 'bcryptjs-v3' };
+    }
+    async dbPush() {
+        const { exec } = require('child_process');
+        return new Promise((resolve) => {
+            exec('npx prisma db push', (error, stdout, stderr) => {
+                resolve({
+                    error: error ? error.message : null,
+                    stdout,
+                    stderr
+                });
+            });
+        });
     }
     async createTenantWithAdmin(body) {
         return this.tenantsService.createTenantWithAdmin(body);
@@ -104,6 +116,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], TenantsController.prototype, "version", null);
+__decorate([
+    (0, common_1.Post)('db-push'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], TenantsController.prototype, "dbPush", null);
 __decorate([
     (0, common_1.Post)('create-with-admin'),
     __param(0, (0, common_1.Body)()),

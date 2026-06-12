@@ -39,7 +39,11 @@ export default function AdminDashboard() {
   const [newDocTitle, setNewDocTitle] = useState('');
   const [newDocText, setNewDocText] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [editingResident, setEditingResident] = useState<any | null>(null);
+  const [editResName, setEditResName] = useState('');
+  const [editResEmail, setEditResEmail] = useState('');
+
+  const [loading, setLoading] = useState(true);
 
   const [units, setUnits] = useState<any[]>([]);
   const [resetUnitEmail, setResetUnitEmail] = useState('');
@@ -874,6 +878,36 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEditResident = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return;
+      const user = JSON.parse(userStr);
+
+      const res = await fetch(`https://condo-ia-backend.onrender.com/api/tenants/${user.tenantId}/units/${editingResident.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editResName,
+          email: editResEmail
+        })
+      });
+
+      if (res.ok) {
+        alert('Residente actualizado exitosamente');
+        setEditingResident(null);
+        fetchUnits();
+      } else {
+        const errData = await res.json();
+        alert('Error al actualizar: ' + errData.message);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error de conexión');
+    }
+  };
+
   const handleCreateAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreatingAnnouncement(true);
@@ -1353,6 +1387,7 @@ export default function AdminDashboard() {
                         <th className="p-3 font-medium">Propietario</th>
                         <th className="p-3 font-medium">Correo</th>
                         <th className="p-3 font-medium">Alícuota</th>
+                        <th className="p-3 font-medium text-right">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1368,6 +1403,19 @@ export default function AdminDashboard() {
                             <td className="p-3 text-white">{ownerName}</td>
                             <td className="p-3 text-gray-400 text-sm">{unit.owner?.email}</td>
                             <td className="p-3 text-indigo-400">{unit.aliquotPercentage}%</td>
+                            <td className="p-3 text-right">
+                              <button 
+                                onClick={() => {
+                                  setEditingResident(unit);
+                                  setEditResName(ownerName !== 'N/A' ? ownerName : '');
+                                  setEditResEmail(unit.owner?.email || '');
+                                }}
+                                className="text-gray-400 hover:text-indigo-400 p-2 rounded-lg hover:bg-indigo-500/10 transition-colors"
+                                title="Editar Propietario"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                              </button>
+                            </td>
                           </tr>
                         );
                       })}
@@ -1375,6 +1423,56 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal Editar Residente */}
+        {editingResident && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#0a0a16] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+              <div className="p-6 border-b border-white/10">
+                <h3 className="text-xl font-bold text-white">Editar Residente ({editingResident.unitNumber})</h3>
+                <p className="text-gray-400 text-sm mt-1">Actualiza los datos del propietario</p>
+              </div>
+              <form onSubmit={handleEditResident} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Nombre del Propietario</label>
+                  <input
+                    type="text"
+                    value={editResName}
+                    onChange={(e) => setEditResName(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#050512] border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                    placeholder="Ej. Juan Pérez"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    value={editResEmail}
+                    onChange={(e) => setEditResEmail(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#050512] border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                    placeholder="correo@ejemplo.com"
+                    required
+                  />
+                </div>
+                <div className="flex gap-4 mt-8">
+                  <button
+                    type="button"
+                    onClick={() => setEditingResident(null)}
+                    className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 px-4 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-xl font-medium shadow-lg transition-all"
+                  >
+                    Guardar Cambios
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

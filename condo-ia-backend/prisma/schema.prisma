@@ -211,3 +211,13 @@ model Reservation {
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   unit      Unit     @relation(fields: [unitId], references: [id])
 }
+
+model WhatsappChatHistory {
+  id        String   @id @default(uuid())
+  phone     String   
+  role      String   // "user" or "model"
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+}

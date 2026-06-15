@@ -1,0 +1,18 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model WhatsappChatHistory {
+  id        String   @id @default(uuid())
+  phone     String   
+  role      String   // "user" or "model"
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+}

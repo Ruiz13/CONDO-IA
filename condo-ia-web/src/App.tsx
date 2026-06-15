@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, ChevronRight, BarChart3, Smartphone, CheckCircle } from 'lucide-react';
+import { Bot, ChevronRight, BarChart3, Smartphone, CheckCircle, MessageCircle } from 'lucide-react';
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -219,6 +219,9 @@ function App() {
 
       {/* Modal de Demostración */}
       {isModalOpen && <DemoModal onClose={() => setIsModalOpen(false)} />}
+
+      {/* Botón Flotante de WhatsApp */}
+      <WhatsAppButton />
     </div>
   );
 }
@@ -291,6 +294,27 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
       <h3 className="text-xl font-semibold mb-3">{title}</h3>
       <p className="text-gray-400 leading-relaxed">{description}</p>
     </motion.div>
+  );
+}
+
+function WhatsAppButton() {
+  const phone = "584241842770";
+  const text = "Hola, me gustaría obtener más información sobre Condo IA.";
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+
+  return (
+    <motion.a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.1 }}
+      className="fixed bottom-6 right-6 z-[90] bg-[#25D366] text-white p-4 rounded-full shadow-lg shadow-[#25D366]/30 flex items-center justify-center hover:bg-[#20bd5a] transition-colors"
+      aria-label="Contactar por WhatsApp"
+    >
+      <MessageCircle className="w-8 h-8" />
+    </motion.a>
   );
 }
 

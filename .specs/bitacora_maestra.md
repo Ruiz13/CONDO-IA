@@ -89,3 +89,8 @@ El ecosistema de Condo IA está compuesto por tres pilares fundamentales:
   - **Soporte de Actualización:** Creado y ejecutado el script [update-names.ts](file:///c:/Users/matar/Downloads/CONDO-IA/condo-ia-backend/prisma/update-names.ts) para poblar automáticamente nombres reales ficticios hispanos a los propietarios actuales de la DB. Sementación en `seed.ts` modificada de igual manera.
   - **App Móvil:** Se agregó la opción interactiva de edición en línea de "Nombre Completo" en la pantalla de Perfil ([profile.tsx](file:///c:/Users/matar/Downloads/CONDO-IA/condo-ia-mobile/src/app/profile.tsx)) conectada al endpoint `update-profile` del backend.
   - **Admin Web:** Sincronizados los paneles de Residentes y Finanzas en [AdminDashboard.tsx](file:///c:/Users/matar/Downloads/CONDO-IA/condo-ia-admin-web/src/pages/AdminDashboard.tsx) para leer e imprimir el nombre de propietario real en lugar de deducirlo del correo (con fallback automático).
+
+## 📌 Estado de Situación Actual
+- **Hito alcanzado:** Webhook de Meta/WhatsApp refactorizado para incluir logs brutos (JSON) e iteración robusta de matrices de eventos entrantes (`entry` y `changes`).
+- **Problema técnico actual:** A la espera de desplegar y validar los logs en Render para confirmar el correcto procesamiento de los mensajes de Meta.
+- **Próxima Tarea Prioritaria:** Realizar una prueba enviando un mensaje al bot y revisar los logs de Render para verificar que todo se reciba y procese correctamente.

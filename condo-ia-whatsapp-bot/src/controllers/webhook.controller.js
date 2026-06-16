@@ -25,30 +25,50 @@ const processMessage = async (req, res) => {
     try {
         const body = req.body;
 
+        // Log global del payload entrante para depuración en Render
+        console.log('--- WEBHOOK PAYLOAD ENTRANTE ---');
+        console.log(JSON.stringify(body, null, 2));
+        console.log('--------------------------------');
+
         // Validar que el webhook proviene de la API de WhatsApp
         if (body.object === 'whatsapp_business_account') {
             
-            // Iterar sobre las entradas y cambios (formato estándar de Meta)
-            if (body.entry && body.entry[0].changes && body.entry[0].changes[0].value.messages && body.entry[0].changes[0].value.messages[0]) {
-                const message = body.entry[0].changes[0].value.messages[0];
-                const contact = body.entry[0].changes[0].value.contacts[0];
-                
-                // Extraer teléfono y asegurarse de que es un mensaje de texto
-                const phoneNumber = message.from;
-                const messageType = message.type;
-                const senderName = contact?.profile?.name || '';
+            // Iterar sobre las entradas (Meta puede enviar eventos en batch)
+            if (body.entry && body.entry.length > 0) {
+                for (const entry of body.entry) {
+                    if (entry.changes && entry.changes.length > 0) {
+                        for (const change of entry.changes) {
+                            const value = change.value;
+                            
+                            // Verificar si es un mensaje
+                            if (value.messages && value.messages.length > 0) {
+                                const message = value.messages[0];
+                                const contact = value.contacts && value.contacts[0];
+                                
+                                const phoneNumber = message.from;
+                                const messageType = message.type;
+                                const senderName = contact?.profile?.name || 'Desconocido';
 
-                if (messageType === 'text') {
-                    const messageText = message.text.body;
-                    console.log(`Mensaje de ${phoneNumber} (${senderName}): ${messageText}`);
+                                if (messageType === 'text') {
+                                    const messageText = message.text.body;
+                                    console.log(`Mensaje de ${phoneNumber} (${senderName}): ${messageText}`);
 
-                    // 1. Generar respuesta con IA y base de datos (Contexto)
-                    const aiResponse = await generateResponse(phoneNumber, messageText);
+                                    // 1. Generar respuesta con IA y base de datos (Contexto)
+                                    const aiResponse = await generateResponse(phoneNumber, messageText);
 
-                    // 2. Enviar la respuesta vía Meta Cloud API
-                    await sendWhatsAppMessage(phoneNumber, aiResponse);
-                } else {
-                    console.log(`Mensaje ignorado (tipo no soportado): ${messageType}`);
+                                    // 2. Enviar la respuesta vía Meta Cloud API
+                                    await sendWhatsAppMessage(phoneNumber, aiResponse);
+                                } else {
+                                    console.log(`Mensaje ignorado (tipo no soportado): ${messageType}`);
+                                }
+                            } else if (value.statuses && value.statuses.length > 0) {
+                                // Es una actualización de estado (enviado, entregado, leído)
+                                console.log(`Actualización de estado recibida: ${value.statuses[0].status} para mensaje ${value.statuses[0].id}`);
+                            } else {
+                                console.log('Evento de cambio no reconocido o sin mensajes/estados.');
+                            }
+                        }
+                    }
                 }
             }
             res.sendStatus(200); // Meta exige que siempre se responda 200 OK rápidamente
